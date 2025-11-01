@@ -9,7 +9,7 @@ worker.get("/workers",(req:Request,res:Response)=>{
 })
 
 worker.get("/worker/:id",(req:Request,res:Response)=>{
-    // i need to make changes in this api for search filter
+    // i need to make changes in this api for search filter`
     res.json({"worker/id":"this is the workers details"})
 })
 
