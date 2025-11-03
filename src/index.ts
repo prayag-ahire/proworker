@@ -2,8 +2,10 @@ import express from "express"
 import { Request,Response } from "express";
 
 const cors = require("cors");
-const UserRouter = require('./Routes/UserAuth');
-const workerRouter = require('./Routes/Worker/WorkerAuth');
+const UserAuth = require('./Routes/UserAuth');
+const workerAuth = require('./Routes/Worker/WorkerAuth');
+const Profile = require('./Routes/Worker/profile');
+const WorkerList = require('./Routes/Client/WorkerList');
 
 const app = express();
 app.use(cors());
@@ -16,10 +18,14 @@ app.get("/api/v1/user",(req:Request,res:Response)=>{
 })
 
 
+// this is the client api for worker list 
+app.use("/api/v1/client",UserAuth,WorkerList);
 
-app.use("/api/v1/client",UserRouter);
+// this is the worker api for worker login , logout , and signup
+app.use("api/v1/worker",UserAuth,workerAuth);
 
-app.use("api/v1/worker",workerRouter);
+// this is the worker api for worker profile
+app.use("api/v1/worker",UserAuth,Profile);
 
 app.listen(3000);
 
