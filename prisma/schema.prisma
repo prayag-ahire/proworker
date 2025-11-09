@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                Int @id @default(autoincrement())
+  name              String
+  ImgURL            String
+  Contect_number    BigInt
+  client_settings   Client_Settings?
+  review            Review[]
+}
+
+
+enum App_Language {
+  English
+  Hindi
+  Marathi
+  Gujarati
+}
+
+
+model Client_Settings {
+  id                Int @id @default(autoincrement())
+  client            Client @relation(fields: [Client_id],references: [id])
+  Client_id         Int @unique
+  ReferCode         Int
+  Reference_Id      Int
+  App_Language      App_Language
+  worker_order      Worker_Order[]
+  product_order     Product_Order[]
+}
+
+
+enum Status {
+  completed
+  pending
+  canceled
+}
+
+
+model Worker {
+  id                  Int @id @default(autoincrement())
+  Name                String
+  ImgURL              String
+  Contect_number      BigInt
+  Rating              Decimal
+  Description         String
+  Charges_PerHour     Int
+  Charges_PerVisit    Int
+  ReferCode           Int
+  Reference_Id        Int
+  worker_image        worker_image[]
+  video               worker_Video[]
+  review              Review[]
+  product             Product[]
+
+  worker_settings     Worker_Settings?
+  worker_schedule     Week_Schedule?
+  month_schedule      Month_Schedule[]
+  worker_order        Worker_Order[]
+}
+
+model Worker_Settings {
+  id                  Int @id @default(autoincrement())
+  worker              Worker @relation(fields: [Worker_Id],references: [id])
+  Worker_Id           Int @unique
+  App_Language        App_Language
+  location            Location?
+  ReferCode           Int
+  Reference_Id        Int
+  worker_training     Worker_Training[]
+}
+
+
+model Location {
+  id                  Int @id @default(autoincrement())
+  worker_settings     Worker_Settings @relation(fields: [Worker_Settings_Id] ,references: [id])
+  Worker_Settings_Id  Int @unique
+  latitude            Float
+  longitude           Float
+}
+
+model Week_Schedule {
+  id                   Int @id @default(autoincrement())
+  worker               Worker @relation(fields: [Worker_Id],references: [id])
+  Worker_Id            Int @unique
+  Start_Sunday         DateTime @db.Time()
+  End_Sunday           DateTime @db.Time()
+  Start_Monday         DateTime @db.Time()
+  End_Monday           DateTime @db.Time()
+  Start_Tuesday        DateTime @db.Time()
+  End_Tuesday          DateTime @db.Time()
+  Start_wednesday      DateTime @db.Time()
+  End_wednesday        DateTime @db.Time()
+  Start_thursday       DateTime @db.Time()
+  End_thursday         DateTime @db.Time()
+  Start_friday         DateTime @db.Time()
+  End_friday           DateTime @db.Time()
+  Start_saturday       DateTime @db.Time()
+  End_saturday         DateTime @db.Time()
+}
+
+model Month_Schedule {
+  id Int @id @default(autoincrement())
+  worker Worker @relation(fields: [Worker_Id],references: [id])
+  Worker_Id Int 
+}
+
+model Worker_Training {
+  id Int @id @default(autoincrement())
+  worker Worker_Settings @relation(fields: [Worker_id],references: [id])
+  Worker_id Int 
+  video Training_Video @relation(fields: [videoId],references: [id])
+  videoId Int
+  Status Boolean
+}
+
+model Training_Video {
+  id Int @id @default(autoincrement())
+  Name String
+  Video_URL String
+  worker_training Worker_Training[]
+}
+model Worker_Order {
+  id Int @id @default(autoincrement())
+  worker Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id Int
+  client Client_Settings @relation(fields: [Client_Id],references: [id])
+  Client_Id Int
+  Work_Status Status
+  date DateTime @db.Date
+  time DateTime @db.Time()
+}
+
+model worker_image {
+  id Int @id @default(autoincrement())
+  worker Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id Int
+  name   String
+  img_URL  String
+}
+
+model worker_Video {
+  id Int @id @default(autoincrement())
+  worker Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id Int
+  Name String
+  Video_URL String
+}
+
+model Review {
+  id Int @id @default(autoincrement())
+  Name String
+  img_URL String?
+  video_URL String?
+  Comment String
+  worker Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id Int
+  client Client @relation(fields: [Client_Id],references: [id])
+  Client_Id Int
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  worker Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id Int
+  Name String
+  product_image   Product_image[]
+  product_video   Product_video[]
+  Price Int
+  Description String
+  quantity Int
+  Rating Decimal
+  product_order Product_Order[]
+}
+
+model Product_image {
+  id Int @id @default(autoincrement())
+  product Product @relation(fields: [product_Id],references: [id])
+  product_Id Int
+  img_URL  String
+}
+
+model Product_video {
+  id Int @id @default(autoincrement())
+  product Product @relation(fields: [product_Id],references: [id])
+  product_Id Int
+  video_URL  String
+}
+
+model Product_Order {
+  id Int @id @default(autoincrement())
+  product Product @relation(fields: [Payment_Id],references: [id])
+  Product_Id Int
+  client Client_Settings @relation(fields: [Client_Id],references: [id])
+  Client_Id Int
+  Payment_Id Int
+  Product_Status Status
+  datetime DateTime
+}
