@@ -1,48 +1,81 @@
 import { Router } from "express";
-import { Request,Response } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
 
-
-const userAuth = require("../userAuth");
+const prisma = new PrismaClient();
 const router = Router();
 
-// this is the testing for user-authentication
-router.get('/client',(req,res)=>{
-    res.send("This is auth route testing ")
-})
 
-router.post("/signup",(req:Request,res:Response)=>{
-    res.send({"signup":"this is signup"})
-})
+// ====================== CLIENT SIGNUP ======================
+router.post("/signup", async (req, res) => {
+  try {
+    const { name, Contect_number, Password } = req.body;
 
-router.post("/login",(req:Request,res:Response)=>{
-    res.send({"login":"prayag ahire"})
-})
+    const hashed = await bcrypt.hash(Password, 10);
 
-router.post("/logout",(req:Request,res:Response)=>{
-    res.send({"logut":"prayag ahire"})
-})
+    const client = await prisma.client.create({
+      data: {
+        name,
+        Contect_number,
+        ImgURL: "",
+        Password: hashed,
+      },
+    });
 
-router.get("/profile",userAuth,(req:Request,res:Response)=>{
-    res.send({"profile":"this is profile"})
-})
+    await prisma.client_Settings.create({
+      data: {
+        Client_id: client.id,
+        App_Language: "English",
+        ReferCode: Math.floor(100000 + Math.random() * 900000),
+        Reference_Id: 0,
+      },
+    });
+
+    const token = jwt.sign(
+      { id: client.id, role: "client" },
+      "SkillSecret",
+      { expiresIn: "7d" }
+    );
+
+    res.json({ token, client });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Signup failed" });
+  }
+});
 
 
+// ====================== CLIENT LOGIN ======================
+router.post("/login", async (req, res) => {
+  try {
+    const { Contect_number, Password } = req.body;
+
+    const client = await prisma.client.findUnique({
+      where: { Contect_number }
+    });
+
+    if (!client) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const match = await bcrypt.compare(Password, client.Password);
+    if (!match) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: client.id, role: "client" },
+      "SkillSecret",
+      { expiresIn: "7d" }
+    );
+
+    res.json({ token, client });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Login failed" });
+  }
+});
 
 
-router.put("/workers",userAuth,(req:Request,res:Response)=>{
-    res.send({"profile":"prayag ahire"})
-})
-
-router.put("/booking",userAuth,(req:Request,res:Response)=>{
-    res.send({"profile":"prayag ahire"})
-})
-
-router.put("/payment",userAuth,(req:Request,res:Response)=>{
-    res.send({"profile":"prayag ahire"})
-})
-
-router.put("/reviews",userAuth,(req:Request,res:Response)=>{
-    res.send({"profile":"prayag ahire"})
-})
-
-module.exports = router;
+export default router;

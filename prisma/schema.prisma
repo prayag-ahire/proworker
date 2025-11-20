@@ -40,7 +40,6 @@ model Client_Settings {
   Reference_Id      Int
   App_Language      App_Language
   worker_order      Worker_Order[]
-  product_order     Product_Order[]
 }
 
 
@@ -65,7 +64,6 @@ model Worker {
   worker_image        worker_image[]
   video               worker_Video[]
   review              Review[]
-  product             Product[]
 
   worker_settings     Worker_Settings?
   worker_schedule     Week_Schedule?
@@ -134,6 +132,7 @@ model Training_Video {
   Video_URL String
   worker_training Worker_Training[]
 }
+
 model Worker_Order {
   id Int @id @default(autoincrement())
   worker Worker @relation(fields: [worker_Id],references: [id])
@@ -171,43 +170,4 @@ model Review {
   worker_Id Int
   client Client @relation(fields: [Client_Id],references: [id])
   Client_Id Int
-}
-
-model Product {
-  id Int @id @default(autoincrement())
-  worker Worker @relation(fields: [worker_Id],references: [id])
-  worker_Id Int
-  Name String
-  product_image   Product_image[]
-  product_video   Product_video[]
-  Price Int
-  Description String
-  quantity Int
-  Rating Decimal
-  product_order Product_Order[]
-}
-
-model Product_image {
-  id Int @id @default(autoincrement())
-  product Product @relation(fields: [product_Id],references: [id])
-  product_Id Int
-  img_URL  String
-}
-
-model Product_video {
-  id Int @id @default(autoincrement())
-  product Product @relation(fields: [product_Id],references: [id])
-  product_Id Int
-  video_URL  String
-}
-
-model Product_Order {
-  id Int @id @default(autoincrement())
-  product Product @relation(fields: [Payment_Id],references: [id])
-  Product_Id Int
-  client Client_Settings @relation(fields: [Client_Id],references: [id])
-  Client_Id Int
-  Payment_Id Int
-  Product_Status Status
-  datetime DateTime
 }
