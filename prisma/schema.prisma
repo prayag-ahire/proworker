@@ -112,65 +112,67 @@ model Week_Schedule {
 }
 
 model Month_Schedule {
-  id        Int      @id @default(autoincrement())
-  worker    Worker   @relation(fields: [Worker_Id], references: [id])
-  Worker_Id Int
-  date      DateTime @db.Date
-  note      String?
+  id                   Int      @id @default(autoincrement())
+  worker               Worker   @relation(fields: [Worker_Id], references: [id])
+  Worker_Id            Int
+  date                 DateTime @db.Date
+  note                 String?
 }
 
 model Worker_Training {
-  id Int @id @default(autoincrement())
-  worker Worker_Settings @relation(fields: [Worker_id],references: [id])
-  Worker_id Int 
-  video Training_Video @relation(fields: [videoId],references: [id])
-  videoId Int
-  Status Boolean
+  id                  Int @id @default(autoincrement())
+  worker              Worker_Settings @relation(fields: [Worker_id],references: [id])
+  Worker_id           Int 
+  video               Training_Video @relation(fields: [videoId],references: [id])
+  videoId             Int
+  Status              Boolean
 }
 
 model Training_Video {
-  id Int @id @default(autoincrement())
-  Name String
-  Video_URL String
-  worker_training Worker_Training[]
+  id                  Int @id @default(autoincrement())
+  Name                String
+  Video_URL           String
+  worker_training     Worker_Training[]
 }
 
 model Worker_Order {
-  id Int @id @default(autoincrement())
-  worker Worker @relation(fields: [worker_Id],references: [id])
-  worker_Id Int
-  client Client_Settings @relation(fields: [Client_Id],references: [id])
-  Client_Id Int
-  Work_Status Status
-  date DateTime @db.Date
-  time DateTime @db.Time()
-  reschedule_comment String?
+  id                  Int @id @default(autoincrement())
+  worker              Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id           Int
+  client              Client_Settings @relation(fields: [Client_Id],references: [id])
+  Client_Id           Int
+  Work_Status         Status
+  date                DateTime @db.Date
+  time                DateTime @db.Time()
+  reschedule_comment  String?
 }
 
 model worker_image {
-  id Int @id @default(autoincrement())
-  worker Worker @relation(fields: [worker_Id],references: [id])
-  worker_Id Int
-  name   String
-  img_URL  String
+  id            Int @id @default(autoincrement())
+  worker        Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id     Int
+  name          String
+  img_URL       String
 }
 
 model worker_Video {
-  id Int @id @default(autoincrement())
-  worker Worker @relation(fields: [worker_Id],references: [id])
-  worker_Id Int
-  Name String
-  Video_URL String
+  id            Int @id @default(autoincrement())
+  worker        Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id     Int
+  Name          String
+  Video_URL     String
 }
 
 model Review {
-  id Int @id @default(autoincrement())
-  Name String
-  img_URL String?
-  video_URL String?
-  Comment String
-  worker Worker @relation(fields: [worker_Id],references: [id])
-  worker_Id Int
-  client Client @relation(fields: [Client_Id],references: [id])
-  Client_Id Int
+  id            Int @id @default(autoincrement())
+  Name          String
+  img_URL       String?
+  video_URL     String?
+  Comment       String
+  worker        Worker @relation(fields: [worker_Id],references: [id])
+  worker_Id     Int
+  client        Client @relation(fields: [Client_Id],references: [id])
+  Client_Id     Int
+  order         Worker_Order @relation(fields: [Order_Id], references: [id])
+  Order_Id      Int
 }
