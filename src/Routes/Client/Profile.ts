@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const client_Profile = Router();
 
 // ====================== 1. GET PROFILE ======================
-client_Profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
+client_Profile.get("/me", userAuth, async (req: any, res: Response) => {
     try {
         const ClientId = req.user.id;
 
@@ -26,7 +26,7 @@ client_Profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
 
 
 // ====================== 2. UPDATE PROFILE ======================
-client_Profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
+client_Profile.put("/me", userAuth, async (req: any, res: Response) => {
     try {
         const ClientId = req.user.id;
 

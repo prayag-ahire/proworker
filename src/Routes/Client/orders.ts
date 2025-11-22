@@ -5,30 +5,36 @@ import { userAuth } from "../userAuth";
 const prisma = new PrismaClient();
 const clientOrders = Router();
 
-// ==================== GET ALL ORDERS ====================
-clientOrders.get("/orders", userAuth, async (req: any, res: Response) => {
+clientOrders.get("/orders/my", userAuth, async (req: any, res: Response) => {
   try {
     const clientId = req.user.id;
 
-    const orders = await prisma.worker_Order.findMany({
+    const allOrders = await prisma.worker_Order.findMany({
       where: { Client_Id: clientId },
       orderBy: { id: "desc" },
       include: {
         worker: {
           select: {
-            id: true,
             Name: true,
             ImgURL: true,
-            Rating: true,
-            Charges_PerHour: true,
-            Charges_PerVisit: true,
-            Description: true
+            Description: true,   // profession
           }
         }
       }
     });
 
-    return res.json({ orders });
+    const formatted = allOrders.map((order:any) => ({
+      orderId: order.id,
+      workerName: order.worker.Name,
+      workerImage: order.worker.ImgURL,
+      profession: order.worker.Description,
+      status: order.Work_Status,
+      date: order.date,
+      time: order.time
+    }));
+
+    return res.json({ orders: formatted });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -36,27 +42,21 @@ clientOrders.get("/orders", userAuth, async (req: any, res: Response) => {
 });
 
 
-// ==================== GET ORDER BY ID ====================
+
 clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
   try {
-    const orderId = Number(req.params.id);
     const clientId = req.user.id;
+    const orderId = Number(req.params.id);
 
     const order = await prisma.worker_Order.findFirst({
-      where: {
-        id: orderId,
-        Client_Id: clientId
-      },
+      where: { id: orderId, Client_Id: clientId },
       include: {
         worker: {
           select: {
-            id: true,
             Name: true,
             ImgURL: true,
-            Rating: true,
             Description: true,
-            Charges_PerHour: true,
-            Charges_PerVisit: true
+            Rating: true
           }
         }
       }
@@ -66,10 +66,22 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    return res.json(order);
+    return res.json({
+      orderId: order.id,
+      status: order.Work_Status,
+      date: order.date,
+      time: order.time,
+      worker: {
+        name: order.worker.Name,
+        image: order.worker.ImgURL,
+        profession: order.worker.Description,
+        rating: order.worker.Rating
+      }
+    });
+
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

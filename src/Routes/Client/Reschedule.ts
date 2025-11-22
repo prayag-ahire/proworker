@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { userAuth } from "../userAuth";
-import dayjs from "dayjs";
 
 const prisma = new PrismaClient();
 const schedule = Router();
