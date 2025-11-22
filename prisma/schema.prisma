@@ -62,7 +62,9 @@ model Worker {
   ReferCode           Int
   Reference_Id        Int
   worker_image        worker_image[]
-  video               worker_Video[]
+  video_video         worker_Video[]
+  review_image        Review_Image[]
+  review_video        Review_Video[]
   review              Review[]
 
   worker_settings     Worker_Settings?
@@ -145,6 +147,7 @@ model Worker_Order {
   date                DateTime @db.Date
   time                DateTime @db.Time()
   reschedule_comment  String?
+  review              Review[]
 }
 
 model worker_image {
@@ -166,8 +169,6 @@ model worker_Video {
 model Review {
   id            Int @id @default(autoincrement())
   Name          String
-  img_URL       String?
-  video_URL     String?
   Comment       String
   worker        Worker @relation(fields: [worker_Id],references: [id])
   worker_Id     Int
@@ -175,4 +176,24 @@ model Review {
   Client_Id     Int
   order         Worker_Order @relation(fields: [Order_Id], references: [id])
   Order_Id      Int
+  createdAt  DateTime @default(now())
+  images     Review_Image[]
+  videos     Review_Video[]
+}
+
+model Review_Image {
+  id        Int     @id @default(autoincrement())
+  review    Review  @relation(fields: [review_Id], references: [id])
+  review_Id Int
+  img_URL   String
+  worker    Worker  @relation(fields: [worker_Id], references: [id])
+  worker_Id Int
+}
+model Review_Video {
+  id        Int     @id @default(autoincrement())
+  review    Review  @relation(fields: [review_Id], references: [id])
+  review_Id Int
+  video_URL String
+  worker    Worker  @relation(fields: [worker_Id], references: [id])
+  worker_Id Int
 }
