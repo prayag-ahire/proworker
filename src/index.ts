@@ -19,13 +19,13 @@ app.get("/api/v1/user",(req:Request,res:Response)=>{
 
 
 // this is the client api for worker list 
-app.use("/api/v1/client",UserAuth,WorkerList);
+app.use("/api/v1/client",WorkerList);
 
 // this is the worker api for worker login , logout , and signup
-app.use("api/v1/worker",UserAuth,workerAuth);
+app.use("api/v1/worker",workerAuth);
 
 // this is the worker api for worker profile
-app.use("api/v1/worker",UserAuth,Profile);
+app.use("api/v1/worker",Profile);
 
 app.listen(3000);
 

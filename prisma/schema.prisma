@@ -92,29 +92,31 @@ model Location {
 }
 
 model Week_Schedule {
-  id                   Int @id @default(autoincrement())
-  worker               Worker @relation(fields: [Worker_Id],references: [id])
-  Worker_Id            Int @unique
-  Start_Sunday         DateTime @db.Time()
-  End_Sunday           DateTime @db.Time()
-  Start_Monday         DateTime @db.Time()
-  End_Monday           DateTime @db.Time()
-  Start_Tuesday        DateTime @db.Time()
-  End_Tuesday          DateTime @db.Time()
-  Start_wednesday      DateTime @db.Time()
-  End_wednesday        DateTime @db.Time()
-  Start_thursday       DateTime @db.Time()
-  End_thursday         DateTime @db.Time()
-  Start_friday         DateTime @db.Time()
-  End_friday           DateTime @db.Time()
-  Start_saturday       DateTime @db.Time()
-  End_saturday         DateTime @db.Time()
+  id                   Int     @id @default(autoincrement())
+  worker               Worker  @relation(fields: [Worker_Id], references: [id])
+  Worker_Id            Int     @unique
+  Start_Sunday         DateTime? @db.Time()
+  End_Sunday           DateTime? @db.Time()
+  Start_Monday         DateTime? @db.Time()
+  End_Monday           DateTime? @db.Time()
+  Start_Tuesday        DateTime? @db.Time()
+  End_Tuesday          DateTime? @db.Time()
+  Start_wednesday      DateTime? @db.Time()
+  End_wednesday        DateTime? @db.Time()
+  Start_thursday       DateTime? @db.Time()
+  End_thursday         DateTime? @db.Time()
+  Start_friday         DateTime? @db.Time()
+  End_friday           DateTime? @db.Time()
+  Start_saturday       DateTime? @db.Time()
+  End_saturday         DateTime? @db.Time()
 }
 
 model Month_Schedule {
-  id Int @id @default(autoincrement())
-  worker Worker @relation(fields: [Worker_Id],references: [id])
-  Worker_Id Int 
+  id        Int      @id @default(autoincrement())
+  worker    Worker   @relation(fields: [Worker_Id], references: [id])
+  Worker_Id Int
+  date      DateTime @db.Date
+  note      String?
 }
 
 model Worker_Training {
@@ -142,6 +144,7 @@ model Worker_Order {
   Work_Status Status
   date DateTime @db.Date
   time DateTime @db.Time()
+  reschedule_comment String?
 }
 
 model worker_image {
