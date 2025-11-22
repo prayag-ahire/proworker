@@ -1,11 +1,11 @@
-import { Router, Request, Response } from "express";
+import { Router, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { userAuth } from "../userAuth";
 
 const prisma = new PrismaClient();
 const orderStatus = Router();
 
-orderStatus.post("/:id/cancel", userAuth, async (req: any, res: Response) => {
+orderStatus.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) => {
     try {
         const orderId = Number(req.params.id);
 
@@ -26,7 +26,7 @@ orderStatus.post("/:id/cancel", userAuth, async (req: any, res: Response) => {
 });
 
 
-orderStatus.post("/:id/reschedule", userAuth, async (req: any, res: Response) => {
+orderStatus.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response) => {
     try {
         const orderId = Number(req.params.id);
         const { comment, new_date, new_time } = req.body;

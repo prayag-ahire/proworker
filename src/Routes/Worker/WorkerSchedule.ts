@@ -16,7 +16,7 @@ function parseTimeOrNull(t?: string | null) {
 
 // GET /schedule/weekly
 // Returns the worker's week schedule (single row)
-schedule.get("/weekly", userAuth, async (req: any, res: Response) => {
+schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
     const schedule = await prisma.week_Schedule.findUnique({
@@ -31,7 +31,7 @@ schedule.get("/weekly", userAuth, async (req: any, res: Response) => {
 
 // PUT /schedule/weekly
 // Body: JSON with Start_* and End_* keys as "HH:mm" or null for each day
-schedule.put("/weekly", userAuth, async (req: any, res: Response) => {
+schedule.put("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
     const body = req.body || {};
@@ -97,7 +97,7 @@ schedule.put("/weekly", userAuth, async (req: any, res: Response) => {
 
 // GET /schedule/month?month=YYYY-MM
 // Returns all holiday entries for the month ONLY (no orders)
-schedule.get("/month", userAuth, async (req: any, res: Response) => {
+schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
     const month = String(req.query.month || "");
@@ -124,7 +124,7 @@ schedule.get("/month", userAuth, async (req: any, res: Response) => {
 
 
 // POST /schedule/month
-schedule.post("/month", userAuth, async (req: any, res: Response) => {
+schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
     const { date, note } = req.body;
@@ -163,20 +163,31 @@ schedule.post("/month", userAuth, async (req: any, res: Response) => {
 });
 
 
-// DELETE /schedule/month/:id
-schedule.delete("/month/:id", userAuth, async (req: any, res: Response) => {
+schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
-    const id = Number(req.params.id);
+    const workerId = req.user.id;
+    const date = String(req.query.date);
 
-    const entry = await prisma.month_Schedule.findUnique({ where: { id } });
-
-    if (!entry || entry.Worker_Id !== req.user.id) {
-      return res.status(404).json({ message: "Holiday not found or unauthorized" });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ message: "Date must be YYYY-MM-DD" });
     }
 
-    const deleted = await prisma.month_Schedule.delete({ where: { id } });
+    const parsed = new Date(date);
 
-    return res.json({ message: "Holiday removed", deleted });
+    const entry = await prisma.month_Schedule.findFirst({
+      where: { Worker_Id: workerId, date: parsed }
+    });
+
+    if (!entry) {
+      return res.status(404).json({ message: "No holiday found for this date" });
+    }
+
+    await prisma.month_Schedule.delete({
+      where: { id: entry.id }
+    });
+
+    return res.json({ message: "Holiday removed successfully", deletedDate: date });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
