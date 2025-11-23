@@ -17,7 +17,7 @@ model Client {
   id                Int @id @default(autoincrement()) 
   name              String
   ImgURL            String
-  Contact_number    BigInt @unique
+  Contact_number    String @unique
   client_settings   ClientSettings?
   Password          String
   worker_order      WorkerOrder[]
@@ -53,8 +53,9 @@ model Worker {
   id                  Int @id @default(autoincrement())
   Name                String
   ImgURL              String
-  Contact_number      BigInt @unique
+  Contact_number      String @unique
   Rating              Decimal
+  profession          String
   Description         String
   Charges_PerHour     Int
   Charges_PerVisit    Int
@@ -183,6 +184,7 @@ model Review {
 
 model ReviewImage {
   id        Int     @id @default(autoincrement())
+  name      String
   review    Review  @relation(fields: [reviewId], references: [id])
   reviewId  Int
   img_URL   String
@@ -192,6 +194,7 @@ model ReviewImage {
 
 model ReviewVideo {
   id        Int     @id @default(autoincrement())
+  name      String
   review    Review  @relation(fields: [reviewId], references: [id])
   reviewId  Int
   video_URL String

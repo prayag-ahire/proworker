@@ -12,6 +12,12 @@ client_Profile.get("/Profile/me", userAuth, async (req: any, res: Response) => {
 
         const data = await prisma.client.findUnique({
             where: { id: ClientId },
+            select : {
+                id: true,
+                name: true,
+                ImgURL: true,
+                Contact_number: true,
+            }
         });
 
         if (!data) {
@@ -54,4 +60,4 @@ client_Profile.put("/Profile/me", userAuth, async (req: any, res: Response) => {
     }
 });
 
-module.exports = client_Profile;
+export default client_Profile;

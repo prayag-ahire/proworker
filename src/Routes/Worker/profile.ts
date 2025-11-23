@@ -11,13 +11,54 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
     const workerId = req.user.id;
 
     const data = await prisma.worker.findUnique({
-      where: { id: workerId },
-      include: {
-        worker_image: true,
-        Worker_video: true,
-        review: true,
+    where: { id: workerId },
+    select: {
+      id: true,
+      Name: true,
+      ImgURL: true,
+      Contact_number: true,
+      Rating: true,
+      Description: true,
+      Charges_PerHour: true,
+      Charges_PerVisit: true,
+
+      worker_image: {
+        select: {
+          id: true,
+          name: true,
+          img_URL: true
+        }
       },
-    });
+
+      Worker_video: {
+        select: {
+          id: true,
+          Name: true,
+          Video_URL: true
+        }
+      },
+
+      review: {
+        select: {
+          images: {
+            select: {
+              id: true,
+              name: true,
+              img_URL: true
+            }
+          },
+          videos: {
+            select: {
+              id: true,
+              name: true,
+              video_URL: true
+            }
+          }
+        }
+      }
+    }
+  });
+
 
     if (!data) return res.status(404).json({ message: "Worker not found" });
 
@@ -53,6 +94,16 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
     const updated = await prisma.worker.update({
       where: { id: workerId },
       data: dataToUpdate,
+      select: {
+        id: true,
+        Name: true,
+        ImgURL: true,
+        Contact_number: true,
+        Rating: true,
+        Description: true,
+        Charges_PerHour: true,
+        Charges_PerVisit: true,
+      }
     });
 
     res.json(updated);
@@ -62,21 +113,6 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
   }
 });
 
-// ------------------ IMAGES (Images & Videos screen) ------------------
-// GET images (worker gallery)
-// ------------------ GET worker images ------------------
-worker_profile.get("/profile/me/images", userAuth, async (req: any, res: Response) => {
-  try {
-    const images = await prisma.workerImage.findMany({
-      where: { workerId: req.user.id }
-    });
-
-    res.json(images);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch images" });
-  }
-});
 
 
 // ------------------ ADD new image ------------------
@@ -126,25 +162,6 @@ worker_profile.delete("/profile/me/images/:id", userAuth, async (req: any, res: 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to delete image" });
-  }
-});
-
-
-// ======================================================
-//                     VIDEOS
-// ======================================================
-
-// ------------------ GET worker videos ------------------
-worker_profile.get("/profile/me/videos", userAuth, async (req: any, res: Response) => {
-  try {
-    const videos = await prisma.workerVideo.findMany({
-      where: { workerId: req.user.id }
-    });
-
-    res.json(videos);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch videos" });
   }
 });
 

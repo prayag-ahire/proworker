@@ -55,8 +55,7 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
           select: {
             Name: true,
             ImgURL: true,
-            Description: true,
-            Rating: true
+            profession: true
           }
         }
       }
@@ -74,8 +73,7 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
       worker: {
         name: order.worker.Name,
         image: order.worker.ImgURL,
-        profession: order.worker.Description,
-        rating: order.worker.Rating
+        profession: order.worker.profession,
       }
     });
 

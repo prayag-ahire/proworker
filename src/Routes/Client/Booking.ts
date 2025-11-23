@@ -10,31 +10,57 @@ const Booking = Router();
 Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
   try {
     const clientId = req.user.id;
-    const { workerId, date, time} = req.body;
+    const { workerId, date, time } = req.body;
 
     const finalDateTime = new Date(`${date}T${time}:00`);
+    const today = new Date();
 
-    // check if slot already booked
+    // ============================
+    // 1️⃣ Date must not be in past
+    // ============================
+    const selectedDate = new Date(date);
+
+    // If date is before today → reject
+    if (selectedDate < new Date(today.toDateString())) {
+      return res.status(400).json({ message: "You cannot book for past dates." });
+    }
+
+    // ============================
+    // 2️⃣ If same day → time must be future
+    // ============================
+    const isSameDay =
+      selectedDate.toDateString() === today.toDateString();
+
+    if (isSameDay && finalDateTime <= today) {
+      return res.status(400).json({ message: "Booking time must be in the future." });
+    }
+
+    // ============================
+    // 3️⃣ Check slot availability
+    // ============================
     const isBooked = await prisma.workerOrder.findFirst({
-      where: { id: workerId, time: finalDateTime }
+      where: {
+        workerId: workerId,
+        date: new Date(date),
+        time: finalDateTime
+      }
     });
 
     if (isBooked) {
-      return res.status(400).json({ message: "Time slot already booked!" });
+      return res.status(400).json({ message: "Time slot is already booked!" });
     }
 
+    // ============================
+    // 4️⃣ Create Booking
+    // ============================
     const order = await prisma.workerOrder.create({
       data: {
         date: new Date(date),
         time: finalDateTime,
         Work_Status: "pending",
         reschedule_comment: null,
-        worker: {
-          connect: { id: workerId }
-        },
-        client: {
-          connect: { id: clientId }
-        }
+        worker: { connect: { id: workerId } },
+        client: { connect: { id: clientId } }
       }
     });
 
@@ -45,9 +71,10 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 
-module.exports = Booking;
+
+export default Booking;
