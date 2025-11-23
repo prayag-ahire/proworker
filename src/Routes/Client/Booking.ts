@@ -1,14 +1,13 @@
 import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { userAuth } from "../userAuth";
-import dayjs from "dayjs";
 
 const prisma = new PrismaClient();
 const Booking = Router();
 
 // ==================== CREATE BOOKING ====================
 
-Booking.post("/create", userAuth, async (req: any, res: Response) => {
+Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
   try {
     const clientId = req.user.id;
     const { workerId, date, time} = req.body;

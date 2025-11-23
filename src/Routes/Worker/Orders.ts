@@ -8,7 +8,7 @@ const orders = Router();
 
 // GET /orders/history
 // Returns all orders for logged-in worker sorted newest -> oldest
-orders.get("/history", userAuth, async (req: any, res: Response) => {
+orders.get("/orders/history", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
 
@@ -36,7 +36,7 @@ orders.get("/history", userAuth, async (req: any, res: Response) => {
 
 // GET /orders/:id
 // Returns full order details for a single order
-orders.get("/:id", userAuth, async (req: any, res: Response) => {
+orders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
   try {
     const id = Number(req.params.id);
     const workerId = req.user.id;

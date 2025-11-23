@@ -1,5 +1,4 @@
-// worker_profile.ts
-import { Router, Request, Response } from "express";
+import { Router, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { userAuth } from "../userAuth";
 
@@ -15,7 +14,7 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
       where: { id: workerId },
       include: {
         worker_image: true,
-        video: true,
+        Worker_video: true,
         review: true,
       },
     });
