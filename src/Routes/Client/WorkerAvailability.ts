@@ -18,14 +18,14 @@ workerAvailability.get("/worker/:id/available-dates", userAuth, async (req: any,
     const start = dayjs(`${month}-01`).startOf("month");
     const end = dayjs(`${month}-01`).endOf("month");
 
-    const week = await prisma.week_Schedule.findUnique({
-      where: { Worker_Id: workerId }
+    const week = await prisma.weekSchedule.findUnique({
+      where: { workerId: workerId }
     });
 
     if (!week) return res.json({ availableDates: [] });
 
-    const holidays = await prisma.month_Schedule.findMany({
-      where: { Worker_Id: workerId, date: { gte: start.toDate(), lte: end.toDate() } }
+    const holidays = await prisma.monthSchedule.findMany({
+      where: { workerId: workerId, date: { gte: start.toDate(), lte: end.toDate() } }
     });
 
     const holidayDates = new Set(holidays.map((h:any) => dayjs(h.date).format("YYYY-MM-DD")));
@@ -38,7 +38,7 @@ workerAvailability.get("/worker/:id/available-dates", userAuth, async (req: any,
       const keyStart = `Start_${weekday.charAt(0).toUpperCase() + weekday.slice(1)}`;
       const keyEnd = `End_${weekday.charAt(0).toUpperCase() + weekday.slice(1)}`;
 
-      const hasHours = week[keyStart] && week[keyEnd];
+      const hasHours = (week as any)[keyStart] && (week as any)[keyEnd];
       const isHoliday = holidayDates.has(d.format("YYYY-MM-DD"));
 
       if (hasHours && !isHoliday) {
@@ -67,8 +67,8 @@ workerAvailability.get("/worker/:id/available-slots", userAuth, async (req: any,
     const d = dayjs(date);
     const weekday = d.format("dddd").toLowerCase();
 
-    const week = await prisma.week_Schedule.findUnique({
-      where: { Worker_Id: workerId }
+    const week = await prisma.weekSchedule.findUnique({
+      where: { workerId: workerId }
     });
 
     if (!week) return res.json({ slots: [] });
@@ -76,13 +76,13 @@ workerAvailability.get("/worker/:id/available-slots", userAuth, async (req: any,
     const startKey = `Start_${weekday.charAt(0).toUpperCase() + weekday.slice(1)}`;
     const endKey = `End_${weekday.charAt(0).toUpperCase() + weekday.slice(1)}`;
 
-    const start = week[startKey];
-    const end = week[endKey];
+    const start = week[startKey as keyof typeof week];
+    const end = week[endKey as keyof typeof week];
 
     if (!start || !end) return res.json({ slots: [] });
 
-    const orders = await prisma.worker_Order.findMany({
-      where: { worker_Id: workerId, date: new Date(date) },
+    const orders = await prisma.workerOrder.findMany({
+      where: { workerId: workerId, date: new Date(date) },
       select: { time: true }
     });
 

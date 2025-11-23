@@ -17,7 +17,7 @@ router.post("/signup", async (req, res) => {
     const worker = await prisma.worker.create({
       data: {
         Name,
-        Contect_number,
+        Contact_number: Contect_number,
         ImgURL: "",
         Password: hashed,
         Rating: 0,
@@ -25,15 +25,16 @@ router.post("/signup", async (req, res) => {
         Charges_PerHour: 0,
         Charges_PerVisit: 0,
         ReferCode: Math.floor(100000 + Math.random() * 900000),
+        ReferenceId: 0, 
       },
     });
 
-    await prisma.worker_Settings.create({
+    await prisma.workerSettings.create({
       data: {
-        Worker_Id: worker.id,
-        App_Language: "English",
+        workerId: worker.id,
+        AppLanguage: "English",
         ReferCode: worker.ReferCode,
-        Reference_Id: 0,
+        ReferenceId: 0,
       },
     });
 
@@ -57,7 +58,7 @@ router.post("/login", async (req, res) => {
     const { Contect_number, Password } = req.body;
 
     const worker = await prisma.worker.findUnique({
-      where: { Contect_number }
+      where: { Contact_number: Contect_number }
     });
 
     if (!worker) {

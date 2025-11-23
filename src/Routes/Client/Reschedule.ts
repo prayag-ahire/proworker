@@ -16,7 +16,7 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
 
     const finalDateTime = new Date(`${new_date}T${new_time}:00`);
 
-    const updated = await prisma.worker_Order.update({
+    const updated = await prisma.workerOrder.update({
       where: { id: orderId },
       data: {
         reschedule_comment: comment,
@@ -43,15 +43,15 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
     const orderId = Number(req.params.id);
     const clientId = req.user.id;
 
-    const order = await prisma.worker_Order.findUnique({
+    const order = await prisma.workerOrder.findUnique({
       where: { id: orderId }
     });
 
-    if (!order || order.Client_Id !== clientId) {
+    if (!order || order.clientId !== clientId) {
       return res.status(404).json({ message: "Order not found or unauthorized" });
     }
 
-    const updated = await prisma.worker_Order.update({
+    const updated = await prisma.workerOrder.update({
       where: { id: orderId },
       data: { Work_Status: "canceled" }
     });

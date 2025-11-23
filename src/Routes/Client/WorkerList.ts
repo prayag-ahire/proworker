@@ -109,21 +109,21 @@ workerlist.get("/worker/:id", userAuth, async (req: any, res: Response) => {
         id: true,
         Name: true,
         ImgURL: true,
-        Contect_number: true,
+        Contact_number: true,
         Rating: true,
         Description: true,
         Charges_PerHour: true,
         Charges_PerVisit: true,
 
         worker_image: true,
-        video: true,
+        Worker_video: true,
         review: {
           select: {
             id: true,
             Name: true,
-            img_URL: true,
-            video_URL: true,
-            Comment: true
+            Comment: true,
+            images: true,
+            videos: true,
           }
         }
       }

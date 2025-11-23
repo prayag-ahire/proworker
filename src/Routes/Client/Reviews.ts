@@ -18,7 +18,7 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
     }
 
     // 1. Find the order
-    const order = await prisma.worker_Order.findUnique({
+    const order = await prisma.workerOrder.findUnique({
       where: { id: orderId },
       include: { worker: true, client: true }
     });
@@ -27,7 +27,7 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
     }
 
     // 2. Ensure order belongs to logged-in client
-    if (order.Client_Id !== clientId) {
+    if (order.clientId !== clientId) {
       return res.status(403).json({ message: "Unauthorized to review this order" });
     }
 
@@ -38,7 +38,7 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
 
     // 4. Ensure no previous review for this order
     const existing = await prisma.review.findFirst({
-      where: { Order_Id: orderId }
+      where: { orderId: orderId }
     });
 
     if (existing) {
@@ -50,15 +50,15 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
       data: {
         Name,
         Comment,
-        worker_Id: order.worker_Id,
-        Client_Id: clientId,
-        Order_Id: orderId
+        workerId: order.workerId,
+        clientId: clientId,
+        orderId: orderId
       }
     });
 
     // 6. Insert images
     if (images.length > 0) {
-      await prisma.review_Image.createMany({
+      await prisma.reviewImage.createMany({
         data: images.map((url: string) => ({
           review_Id: review.id,
           img_URL: url
@@ -68,7 +68,7 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
 
     // 7. Insert videos
     if (videos.length > 0) {
-      await prisma.review_Video.createMany({
+      await prisma.reviewVideo.createMany({
         data: videos.map((url: string) => ({
           review_Id: review.id,
           video_URL: url
@@ -92,7 +92,7 @@ ReviewRouter.get("/Review/my", userAuth, async (req: any, res: Response) => {
     const clientId = req.user.id;
 
     const reviews = await prisma.review.findMany({
-      where: { Client_Id: clientId },
+      where: { clientId: clientId },
       orderBy: { createdAt: "desc" },
       include: {
         worker: { select: { Name: true, ImgURL: true } },
@@ -131,7 +131,6 @@ ReviewRouter.get("/Review/:id", userAuth, async (req: any, res: Response) => {
         },
         images: true,
         videos: true,
-        Comment: true,
       }
     });
 
@@ -140,7 +139,7 @@ ReviewRouter.get("/Review/:id", userAuth, async (req: any, res: Response) => {
     }
 
     // prevent accessing other user's reviews
-    if (review.Client_Id !== clientId) {
+    if (review.clientId !== clientId) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 

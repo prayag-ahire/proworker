@@ -5,8 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -21,6 +20,7 @@ model Client {
   Contact_number    BigInt @unique
   client_settings   ClientSettings?
   Password          String
+  worker_order      WorkerOrder[]
   review            Review[]
 }
 
@@ -34,11 +34,10 @@ enum AppLanguage {
 model ClientSettings {
   id                Int @id @default(autoincrement())
   client            Client @relation(fields: [clientId], references: [id])
-  clientId          Int
+  clientId          Int @unique
   ReferCode         Int
   ReferenceId       Int
   AppLanguage       AppLanguage
-  worker_order      WorkerOrder[]
 }
 
 
@@ -72,24 +71,24 @@ model Worker {
   worker_schedule     WeekSchedule?
   month_schedule      MonthSchedule[]
   worker_order        WorkerOrder[]
+  worker_training     WorkerTraining[]
 }
 
 model WorkerSettings {
   id                  Int @id @default(autoincrement())
   worker              Worker @relation(fields: [workerId], references: [id])
-  workerId            Int
+  workerId            Int @unique
   AppLanguage         AppLanguage
   location            Location?
   ReferCode           Int
   ReferenceId         Int
-  worker_training     WorkerTraining[]
 }
 
 
 model Location {
   id                  Int @id @default(autoincrement())
   worker_settings     WorkerSettings @relation(fields: [workerSettingsId], references: [id])
-  workerSettingsId    Int
+  workerSettingsId    Int @unique
   latitude            Float
   longitude           Float
 }
@@ -97,7 +96,7 @@ model Location {
 model WeekSchedule {
   id                   Int     @id @default(autoincrement())
   worker               Worker  @relation(fields: [workerId], references: [id])
-  workerId             Int
+  workerId             Int @unique
   Start_Sunday         DateTime? @db.Time()
   End_Sunday           DateTime? @db.Time()
   Start_Monday         DateTime? @db.Time()
@@ -124,8 +123,8 @@ model MonthSchedule {
 
 model WorkerTraining {
   id                  Int @id @default(autoincrement())
-  worker              WorkerSettings @relation(fields: [workerSettingsId], references: [id])
-  workerSettingsId    Int
+  worker              Worker @relation(fields: [workerId], references: [id])
+  workerId            Int
   video               TrainingVideo @relation(fields: [videoId], references: [id])
   videoId             Int
   Status              Boolean
@@ -142,8 +141,8 @@ model WorkerOrder {
   id                  Int @id @default(autoincrement())
   worker              Worker @relation(fields: [workerId], references: [id])
   workerId            Int
-  client              ClientSettings @relation(fields: [clientSettingsId], references: [id])
-  clientSettingsId    Int
+  client              Client @relation(fields: [clientId], references: [id])
+  clientId            Int
   Work_Status         Status
   date                DateTime @db.Date
   time                DateTime @db.Time()

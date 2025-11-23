@@ -20,9 +20,9 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
         if (view === "day") {
             const todaysDate = today.format("YYYY-MM-DD");
 
-            const orders = await prisma.worker_Order.findMany({
+            const orders = await prisma.workerOrder.findMany({
                 where: {
-                    worker_Id: workerId,
+                    workerId: workerId,
                     date: new Date(todaysDate)
                 },
                 include: {
@@ -53,9 +53,9 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
             const start = today.startOf("week");
             const end = today.endOf("week");
 
-            const orders = await prisma.worker_Order.findMany({
+            const orders = await prisma.workerOrder.findMany({
                 where: {
-                    worker_Id: workerId,
+                    workerId: workerId,
                     date: {
                         gte: start.toDate(),
                         lte: end.toDate()
@@ -93,9 +93,9 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
             const start = today.startOf("month").toDate();
             const end = today.endOf("month").toDate();
 
-            const orders = await prisma.worker_Order.findMany({
+            const orders = await prisma.workerOrder.findMany({
                 where: {
-                    worker_Id: workerId,
+                    workerId: workerId,
                     date: { gte: start, lte: end }
                 }
             });

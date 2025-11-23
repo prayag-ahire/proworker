@@ -13,9 +13,9 @@ client_Settings.get("/settings/me/language", userAuth, async (req: any, res: Res
     try {
         const clientId = req.user.id;
 
-        const settings = await prisma.client_Settings.findUnique({
-            where: { Client_id: clientId },
-            select: { App_Language: true }
+        const settings = await prisma.clientSettings.findUnique({
+            where: { clientId: clientId },
+            select: { AppLanguage: true }
         });
 
         if (!settings) {
@@ -41,10 +41,10 @@ client_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
             return res.status(400).json({ message: "App_Language is required" });
         }
 
-        const update = await prisma.client_Settings.update({
-            where: { Client_id: clientId },
-            data: { App_Language },
-            select: { App_Language: true }
+        const update = await prisma.clientSettings.update({
+            where: { clientId: clientId },
+            data: { AppLanguage: App_Language },
+            select: { AppLanguage: true }
         });
 
         res.json(update);
@@ -62,8 +62,8 @@ client_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Respo
     try {
         const clientId = req.user.id;
 
-        const settings = await prisma.client_Settings.findUnique({
-            where: { Client_id: clientId },
+        const settings = await prisma.clientSettings.findUnique({
+            where: { clientId: clientId },
             select: { ReferCode: true }
         });
 

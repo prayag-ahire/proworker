@@ -11,8 +11,8 @@ const worker_Settings = Router();
 worker_Settings.get("/settings/me/location", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const settings = await prisma.worker_Settings.findUnique({
-      where: { Worker_Id: workerId },
+    const settings = await prisma.workerSettings.findUnique({
+      where: { workerId: workerId },
       include: { location: true },
     });
     if (!settings) return res.status(404).json({ message: "Settings not found" });
@@ -34,16 +34,16 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
       return res.status(400).json({ message: "latitude & longitude are required" });
     }
 
-    const settings = await prisma.worker_Settings.findUnique({
-      where: { Worker_Id: workerId },
+    const settings = await prisma.workerSettings.findUnique({
+      where: { workerId: workerId },
     });
     if (!settings) return res.status(404).json({ message: "Settings not found" });
 
     const location = await prisma.location.upsert({
-      where: { Worker_Settings_Id: settings.id },
+      where: { workerSettingsId: settings.id },
       update: { latitude, longitude },
       create: {
-        Worker_Settings_Id: settings.id,
+        workerSettingsId: settings.id,
         latitude,
         longitude,
       },
@@ -61,9 +61,9 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
 worker_Settings.get("/settings/me/language", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const settings = await prisma.worker_Settings.findUnique({
-      where: { Worker_Id: workerId },
-      select: { App_Language: true },
+    const settings = await prisma.workerSettings.findUnique({
+      where: { workerId: workerId },
+      select: { AppLanguage: true },
     });
 
     if (!settings) return res.status(404).json({ message: "Settings not found" });
@@ -81,10 +81,10 @@ worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
     const { App_Language } = req.body;
     if (!App_Language) return res.status(400).json({ message: "App_Language is required" });
 
-    const update = await prisma.worker_Settings.update({
-      where: { Worker_Id: workerId },
-      data: { App_Language },
-      select: { App_Language: true },
+    const update = await prisma.workerSettings.update({
+      where: { workerId: workerId },
+      data: { AppLanguage: App_Language },
+      select: { AppLanguage: true },
     });
 
     res.json(update);
@@ -99,8 +99,8 @@ worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
 worker_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const settings = await prisma.worker_Settings.findUnique({
-      where: { Worker_Id: workerId },
+    const settings = await prisma.workerSettings.findUnique({
+      where: { workerId: workerId },
       select: { ReferCode: true },
     });
     if (!settings) return res.status(404).json({ message: "Settings not found" });
@@ -117,8 +117,8 @@ worker_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Respo
 worker_Settings.get("/settings/me/training", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const training = await prisma.worker_Training.findMany({
-      where: { Worker_Id: workerId },
+    const training = await prisma.workerTraining.findMany({
+      where: { workerId: workerId },
       include: { video: true },
     });
     res.json(training);
@@ -139,10 +139,10 @@ worker_Settings.put("/settings/me/training/:id", userAuth, async (req: any, res:
       return res.status(400).json({ message: "Status must be boolean" });
     }
 
-    const updated = await prisma.worker_Training.updateMany({
+    const updated = await prisma.workerTraining.updateMany({
       where: {
         id: trainingId,
-        Worker_id: workerId,  // Ensure the record belongs to the logged-in worker
+        workerId: workerId,  // Ensure the record belongs to the logged-in worker
       },
       data: { Status }
     });

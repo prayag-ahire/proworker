@@ -12,8 +12,8 @@ orders.get("/orders/history", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
 
-    const orders = await prisma.worker_Order.findMany({
-      where: { worker_Id: workerId },
+    const orders = await prisma.workerOrder.findMany({
+      where: { workerId: workerId },
       orderBy: { date: "desc" },
       include: { client: true } // include client details for display
     });
@@ -41,12 +41,12 @@ orders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
     const id = Number(req.params.id);
     const workerId = req.user.id;
 
-    const order = await prisma.worker_Order.findUnique({
+    const order = await prisma.workerOrder.findUnique({
       where: { id },
       include: { client: true }
     });
 
-    if (!order || order.worker_Id !== workerId) {
+    if (!order || order.workerId !== workerId) {
       return res.status(404).json({ message: "Order not found" });
     }
 

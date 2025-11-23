@@ -9,7 +9,7 @@ orderStatus.post("/orders/:id/cancel", userAuth, async (req: any, res: Response)
     try {
         const orderId = Number(req.params.id);
 
-        const updated = await prisma.worker_Order.update({
+        const updated = await prisma.workerOrder.update({
             where: { id: orderId },
             data: { Work_Status: "canceled" }
         });
@@ -34,7 +34,7 @@ orderStatus.post("/orders/:id/reschedule", userAuth, async (req: any, res: Respo
         // Combine date + time into single DateTime
         const finalDateTime = new Date(`${new_date}T${new_time}:00`);
 
-        const updated = await prisma.worker_Order.update({
+        const updated = await prisma.workerOrder.update({
             where: { id: orderId },
             data: {
                 reschedule_comment: comment,

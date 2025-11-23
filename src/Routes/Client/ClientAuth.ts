@@ -10,25 +10,25 @@ const router = Router();
 // ====================== CLIENT SIGNUP ======================
 router.post("/signup", async (req, res) => {
   try {
-    const { name, Contect_number, Password } = req.body;
+    const { name, Contect_number, Password,refarid } = req.body;
 
     const hashed = await bcrypt.hash(Password, 10);
 
     const client = await prisma.client.create({
       data: {
         name,
-        Contect_number,
+        Contact_number: Contect_number,
         ImgURL: "",
         Password: hashed,
       },
     });
 
-    await prisma.client_Settings.create({
+    await prisma.clientSettings.create({
       data: {
-        Client_id: client.id,
-        App_Language: "English",
+        clientId: client.id,
+        AppLanguage: "English",
         ReferCode: Math.floor(100000 + Math.random() * 900000),
-        Reference_Id: 0,
+        ReferenceId: refarid,
       },
     });
 
@@ -52,7 +52,7 @@ router.post("/login", async (req, res) => {
     const { Contect_number, Password } = req.body;
 
     const client = await prisma.client.findUnique({
-      where: { Contect_number }
+      where: { Contact_number: Contect_number }
     });
 
     if (!client) {

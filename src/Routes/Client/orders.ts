@@ -9,8 +9,8 @@ clientOrders.get("/orders/my", userAuth, async (req: any, res: Response) => {
   try {
     const clientId = req.user.id;
 
-    const allOrders = await prisma.worker_Order.findMany({
-      where: { Client_Id: clientId },
+    const allOrders = await prisma.workerOrder.findMany({
+      where: { clientId: clientId },
       orderBy: { id: "desc" },
       include: {
         worker: {
@@ -48,8 +48,8 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
     const clientId = req.user.id;
     const orderId = Number(req.params.id);
 
-    const order = await prisma.worker_Order.findFirst({
-      where: { id: orderId, Client_Id: clientId },
+    const order = await prisma.workerOrder.findFirst({
+      where: { id: orderId, clientId: clientId },
       include: {
         worker: {
           select: {

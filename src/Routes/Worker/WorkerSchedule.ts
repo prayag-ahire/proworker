@@ -19,8 +19,8 @@ function parseTimeOrNull(t?: string | null) {
 schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const schedule = await prisma.week_Schedule.findUnique({
-      where: { Worker_Id: workerId }
+    const schedule = await prisma.weekSchedule.findUnique({
+      where: { workerId: workerId }
     });
     return res.json({ schedule });
   } catch (err) {
@@ -76,16 +76,16 @@ schedule.put("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response)
     for (const f of fields) dataAny[f] = body[f] ? parseTimeOrNull(body[f]) : null;
 
     // Upsert by Worker_Id (find then create/update)
-    const existing = await prisma.week_Schedule.findUnique({ where: { Worker_Id: workerId } });
+    const existing = await prisma.weekSchedule.findUnique({ where: { workerId: workerId } });
 
     let result;
     if (existing) {
-      result = await prisma.week_Schedule.update({
+      result = await prisma.weekSchedule.update({
         where: { id: existing.id },
         data: dataAny
       });
     } else {
-      result = await prisma.week_Schedule.create({ data: dataAny });
+      result = await prisma.weekSchedule.create({ data: dataAny });
     }
 
     return res.json({ message: "Weekly schedule saved", schedule: result });
@@ -109,8 +109,8 @@ schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) 
     const start = dayjs(`${month}-01`).startOf("month").toDate();
     const end = dayjs(`${month}-01`).endOf("month").toDate();
 
-    const holidays = await prisma.month_Schedule.findMany({
-      where: { Worker_Id: workerId, date: { gte: start, lte: end } },
+    const holidays = await prisma.monthSchedule.findMany({
+      where: { workerId: workerId, date: { gte: start, lte: end } },
       orderBy: { date: "asc" }
     });
 
@@ -135,17 +135,17 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
 
     const parsed = dayjs(date).startOf("day").toDate();
 
-    const exists = await prisma.month_Schedule.findFirst({
-      where: { Worker_Id: workerId, date: parsed }
+    const exists = await prisma.monthSchedule.findFirst({
+      where: { workerId: workerId, date: parsed }
     });
 
     if (exists) {
       return res.status(400).json({ message: "Holiday already added for this date" });
     }
 
-    const created = await prisma.month_Schedule.create({
+    const created = await prisma.monthSchedule.create({
       data: {
-        Worker: { connect: { id: workerId } },
+        worker: { connect: { id: workerId } },
         date: parsed,
         note: note ?? null
       }
@@ -174,15 +174,15 @@ schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Respons
 
     const parsed = new Date(date);
 
-    const entry = await prisma.month_Schedule.findFirst({
-      where: { Worker_Id: workerId, date: parsed }
+    const entry = await prisma.monthSchedule.findFirst({
+      where: { workerId: workerId, date: parsed }
     });
 
     if (!entry) {
       return res.status(404).json({ message: "No holiday found for this date" });
     }
 
-    await prisma.month_Schedule.delete({
+    await prisma.monthSchedule.delete({
       where: { id: entry.id }
     });
 

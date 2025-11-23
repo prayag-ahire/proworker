@@ -67,8 +67,8 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
 // ------------------ GET worker images ------------------
 worker_profile.get("/profile/me/images", userAuth, async (req: any, res: Response) => {
   try {
-    const images = await prisma.worker_image.findMany({
-      where: { worker_Id: req.user.id }
+    const images = await prisma.workerImage.findMany({
+      where: { workerId: req.user.id }
     });
 
     res.json(images);
@@ -89,9 +89,9 @@ worker_profile.post("/profile/me/images", userAuth, async (req: any, res: Respon
       return res.status(400).json({ message: "name and img_URL are required" });
     }
 
-    const created = await prisma.worker_image.create({
+    const created = await prisma.workerImage.create({
       data: {
-        worker_Id: req.user.id,
+        workerId: req.user.id,
         name,
         img_URL
       }
@@ -111,10 +111,10 @@ worker_profile.delete("/profile/me/images/:id", userAuth, async (req: any, res: 
   try {
     const imageId = Number(req.params.id);
 
-    const deleted = await prisma.worker_image.deleteMany({
+    const deleted = await prisma.workerImage.deleteMany({
       where: {
         id: imageId,
-        worker_Id: req.user.id   // secure check
+        workerId: req.user.id   // secure check
       }
     });
 
@@ -137,8 +137,8 @@ worker_profile.delete("/profile/me/images/:id", userAuth, async (req: any, res: 
 // ------------------ GET worker videos ------------------
 worker_profile.get("/profile/me/videos", userAuth, async (req: any, res: Response) => {
   try {
-    const videos = await prisma.worker_Video.findMany({
-      where: { worker_Id: req.user.id }
+    const videos = await prisma.workerVideo.findMany({
+      where: { workerId: req.user.id }
     });
 
     res.json(videos);
@@ -159,9 +159,9 @@ worker_profile.post("/profile/me/videos", userAuth, async (req: any, res: Respon
       return res.status(400).json({ message: "Name and Video_URL are required" });
     }
 
-    const created = await prisma.worker_Video.create({
+    const created = await prisma.workerVideo.create({
       data: {
-        worker_Id: req.user.id,
+        workerId: req.user.id,
         Name,
         Video_URL
       }
@@ -182,10 +182,10 @@ worker_profile.delete("/profile/me/videos/:id", userAuth, async (req: any, res: 
   try {
     const videoId = Number(req.params.id);
 
-    const deleted = await prisma.worker_Video.deleteMany({
+    const deleted = await prisma.workerVideo.deleteMany({
       where: {
         id: videoId,
-        worker_Id: req.user.id   // secure
+        workerId: req.user.id   // secure
       }
     });
 
