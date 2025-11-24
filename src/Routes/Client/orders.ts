@@ -19,7 +19,8 @@ clientOrders.get("/orders/my", userAuth, async (req: any, res: Response) => {
             ImgURL: true,
             Description: true,   // profession
           }
-        }
+        },
+        Status: true
       }
     });
 
@@ -28,7 +29,7 @@ clientOrders.get("/orders/my", userAuth, async (req: any, res: Response) => {
       workerName: order.worker.Name,
       workerImage: order.worker.ImgURL,
       profession: order.worker.Description,
-      status: order.Work_Status,
+      status: order.Status.status_name,
       date: order.date,
       time: order.time
     }));
@@ -57,7 +58,8 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
             ImgURL: true,
             profession: true
           }
-        }
+        },
+        Status: true
       }
     });
 
@@ -67,7 +69,7 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
 
     return res.json({
       orderId: order.id,
-      status: order.Work_Status,
+      status: order.Status.status_name,
       date: order.date,
       time: order.time,
       worker: {

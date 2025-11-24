@@ -31,69 +31,107 @@ schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response)
 
 // PUT /schedule/weekly
 // Body: JSON with Start_* and End_* keys as "HH:mm" or null for each day
-schedule.put("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
+schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
     const body = req.body || {};
 
-    // fields expected
     const fields = [
       "Start_Sunday","End_Sunday","Start_Monday","End_Monday","Start_Tuesday","End_Tuesday",
-      "Start_wednesday","End_wednesday","Start_thursday","End_thursday","Start_friday","End_friday",
-      "Start_saturday","End_saturday"
+      "Start_Wednesday","End_Wednesday","Start_Thursday","End_Thursday","Start_Friday","End_Friday",
+      "Start_Saturday","End_Saturday"
     ];
 
-    // validate basic format
+    // Validate HH:mm or null
     for (const f of fields) {
       const v = body[f];
       if (v !== undefined && v !== null && !/^\d{2}:\d{2}$/.test(v)) {
-        return res.status(400).json({ message: `Invalid time format for ${f}. Use HH:mm or null.` });
+        return res.status(400).json({ message: `Invalid time format for ${f}. Use HH:mm.` });
       }
     }
 
-    // ensure start < end when both provided
+    // Validate Start + End pairs
     const dayPairs = [
       ["Start_Sunday","End_Sunday"],
       ["Start_Monday","End_Monday"],
       ["Start_Tuesday","End_Tuesday"],
-      ["Start_wednesday","End_wednesday"],
-      ["Start_thursday","End_thursday"],
-      ["Start_friday","End_friday"],
-      ["Start_saturday","End_saturday"]
+      ["Start_Wednesday","End_Wednesday"],
+      ["Start_Thursday","End_Thursday"],
+      ["Start_Friday","End_Friday"],
+      ["Start_Saturday","End_Saturday"]
     ];
 
-    for (const [sKey, eKey] of dayPairs) {
-      const s = body[sKey], e = body[eKey];
+    for (const [startKey, endKey] of dayPairs) {
+      const s = body[startKey];
+      const e = body[endKey];
+
+      // One missing → ERROR
+      if ((s && !e) || (!s && e)) {
+        return res.status(400).json({
+          message: `${startKey} and ${endKey} must be provided together`
+        });
+      }
+
+      // If both exist, validate order
       if (s && e) {
-        const sDate = parseTimeOrNull(s), eDate = parseTimeOrNull(e);
-        if (!sDate || !eDate) return res.status(400).json({ message: `Invalid times for ${sKey}/${eKey}` });
-        if (sDate >= eDate) return res.status(400).json({ message: `${sKey} must be earlier than ${eKey}` });
+        const sDate = parseTimeOrNull(s);
+        const eDate = parseTimeOrNull(e);
+
+        if (!sDate || !eDate) {
+          return res.status(400).json({ message: `Invalid time for ${startKey}/${endKey}` });
+        }
+
+        if (sDate >= eDate) {
+          return res.status(400).json({
+            message: `${startKey} must be earlier than ${endKey}`
+          });
+        }
       }
     }
 
-    // Build data to upsert (convert HH:mm -> Date or null)
-    const dataAny: any = { Worker_Id: workerId };
-    for (const f of fields) dataAny[f] = body[f] ? parseTimeOrNull(body[f]) : null;
-
-    // Upsert by Worker_Id (find then create/update)
-    const existing = await prisma.weekSchedule.findUnique({ where: { workerId: workerId } });
-
-    let result;
-    if (existing) {
-      result = await prisma.weekSchedule.update({
-        where: { id: existing.id },
-        data: dataAny
-      });
-    } else {
-      result = await prisma.weekSchedule.create({ data: dataAny });
+    // Build save object
+    const dataToSave: any = {};
+    for (const f of fields) {
+      if (body[f] !== undefined) {
+        dataToSave[f] = body[f] ? parseTimeOrNull(body[f]) : null;
+      }
     }
 
-    return res.json({ message: "Weekly schedule saved", schedule: result });
-  } catch (err) {
-    console.error(err);
+    // Check if schedule exists
+    const existing = await prisma.weekSchedule.findUnique({
+      where: { workerId }
+    });
+
+    let result;
+
+    if (existing) {
+      // Update only the provided fields
+      result = await prisma.weekSchedule.update({
+        where: { workerId },
+        data: dataToSave
+      });
+    } else {
+      // Create — only relation + time fields allowed
+      result = await prisma.weekSchedule.create({
+        data: {
+          worker: { connect: { id: workerId } }, // Prisma sets workerId automatically
+          ...dataToSave
+        }
+      });
+    }
+
+    return res.json({
+      message: "Weekly schedule saved successfully",
+      schedule: result
+    });
+
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
 
 // GET /schedule/month?month=YYYY-MM
 // Returns all holiday entries for the month ONLY (no orders)

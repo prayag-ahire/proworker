@@ -15,14 +15,14 @@ orders.get("/orders/history", userAuth, async (req: any, res: Response) => {
     const orders = await prisma.workerOrder.findMany({
       where: { workerId: workerId },
       orderBy: { date: "desc" },
-      include: { client: true } // include client details for display
+      include: { client: true, Status: true } // include client details for display
     });
 
     // map to UI-friendly shape
     const payload = orders.map((o:any) => ({
       id: o.id,
       clientName: o.client ? (o.client as any).name ?? null : null,
-      status: o.Work_Status,
+      status: o.Status.status_name,
       date: o.date,
       time: o.time
     }));
@@ -43,7 +43,7 @@ orders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
 
     const order = await prisma.workerOrder.findUnique({
       where: { id },
-      include: { client: true }
+      include: { client: true, Status: true },
     });
 
     if (!order || order.workerId !== workerId) {
@@ -54,7 +54,7 @@ orders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
       id: order.id,
       client: order.client ? (order.client as any).name ?? null : null,
       clientProfile: order.client ? (order.client as any).ImgURL ?? null : null,
-      status: order.Work_Status,
+      status: order.Status.status_name,
       date: order.date,
       time: order.time,
       reschedule_comment: order.reschedule_comment ?? null

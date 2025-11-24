@@ -6,74 +6,66 @@ const prisma = new PrismaClient();
 const Booking = Router();
 
 // ==================== CREATE BOOKING ====================
-
 Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
   try {
     const clientId = req.user.id;
     const { workerId, date, time } = req.body;
 
-    const finalDateTime = new Date(`${date}T${time}:00`);
     const today = new Date();
-
-    // ============================
-    // 1️⃣ Date must not be in past
-    // ============================
     const selectedDate = new Date(date);
 
-    // If date is before today → reject
+    // Convert TIME only
+    const onlyTime = new Date(`1970-01-01T${time}:00`);
+    const finalDateTime = new Date(`${date}T${time}:00`);
+
+    // Past date
     if (selectedDate < new Date(today.toDateString())) {
       return res.status(400).json({ message: "You cannot book for past dates." });
     }
 
-    // ============================
-    // 2️⃣ If same day → time must be future
-    // ============================
-    const isSameDay =
-      selectedDate.toDateString() === today.toDateString();
-
+    // Same-day past time
+    const isSameDay = selectedDate.toDateString() === today.toDateString();
     if (isSameDay && finalDateTime <= today) {
       return res.status(400).json({ message: "Booking time must be in the future." });
     }
 
-    // ============================
-    // 3️⃣ Check slot availability
-    // ============================
-    const isBooked = await prisma.workerOrder.findFirst({
+    // Slot check
+    const existingOrder = await prisma.workerOrder.findFirst({
       where: {
-        workerId: workerId,
-        date: new Date(date),
-        time: finalDateTime
+        workerId,
+        date: selectedDate,
+        time: onlyTime
       }
     });
 
-    if (isBooked) {
-      return res.status(400).json({ message: "Time slot is already booked!" });
+    // Slot is blocked if order exists and status != cancelled
+    if (existingOrder && existingOrder.Order_Status !== 3) {
+      return res.status(400).json({ message: "Time slot is not available!" });
     }
 
-    // ============================
-    // 4️⃣ Create Booking
-    // ============================
+    // Create order
     const order = await prisma.workerOrder.create({
       data: {
-        date: new Date(date),
-        time: finalDateTime,
-        Work_Status: "pending",
+        date: selectedDate,
+        time: onlyTime,
+        Status: { connect: { id: 2 } }, // Pending
         reschedule_comment: null,
         worker: { connect: { id: workerId } },
         client: { connect: { id: clientId } }
+      },
+      include: {
+        Status: true
       }
     });
 
-    return res.json({
-      message: "Order created successfully",
-      order
-    });
+    return res.json({ message: "Order created successfully", order });
 
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 
 

@@ -41,11 +41,10 @@ model ClientSettings {
 }
 
 
-enum Status {
-  completed
-  pending
-  canceled
-  rescheduled
+model Status {
+  id          Int     @id @default(autoincrement())
+  status_name String  @unique
+  WorkerOrder WorkerOrder[]
 }
 
 
@@ -62,6 +61,7 @@ model Worker {
   ReferCode           Int
   ReferenceId         Int
   Password            String
+  Active_Status       Boolean @default(true)
   worker_image        WorkerImage[]
   Worker_video        WorkerVideo[]
   review_image        ReviewImage[]
@@ -144,7 +144,8 @@ model WorkerOrder {
   workerId            Int
   client              Client @relation(fields: [clientId], references: [id])
   clientId            Int
-  Work_Status         Status
+  Status              Status @relation(fields: [Order_Status], references: [id])
+  Order_Status        Int 
   date                DateTime @db.Date
   time                DateTime @db.Time()
   reschedule_comment  String?

@@ -12,7 +12,7 @@ router.post("/signup", async (req, res) => {
     const { Name, Contect_number, Password } = req.body;
 
     // 1. Check if phone already registered
-    const exists = await prisma.worker.findUnique({
+    const exists = await prisma.worker.findUnique({ 
       where: { Contact_number: Contect_number }
     });
 

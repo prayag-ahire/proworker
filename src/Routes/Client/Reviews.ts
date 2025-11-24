@@ -32,7 +32,7 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
     }
 
     // 3. Ensure order is completed
-    if (order.Work_Status !== "completed") {
+    if (order.Order_Status !== 1) {
       return res.status(400).json({ message: "You can review only completed orders" });
     }
 
