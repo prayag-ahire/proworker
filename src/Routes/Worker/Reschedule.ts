@@ -8,27 +8,39 @@ const orderStatus = Router();
 orderStatus.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) => {
   try {
     const orderId = Number(req.params.id);
+    const clientId = req.user.id;
 
-    // 🔍 Get order first
+    // 1️⃣ Fetch order
     const order = await prisma.workerOrder.findUnique({
       where: { id: orderId }
     });
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    if (!order || order.clientId !== clientId) {
+      return res.status(404).json({ message: "Order not found or unauthorized" });
     }
 
-    // ❌ Allow cancel only if PENDING (2)
+    // 2️⃣ Only cancel if pending
     if (order.Order_Status !== 2) {
       return res.status(400).json({ message: "Only pending orders can be cancelled" });
     }
 
-    // ✔ Cancel the order
+    // 3️⃣ Cancel order
     const updated = await prisma.workerOrder.update({
       where: { id: orderId },
-      data: { Order_Status: 3 }
+      data: { Order_Status: 3 },
     });
 
+    // 4️⃣ Create notification for the worker
+    await prisma.notification.create({
+      data: {
+        clientId: clientId,
+        workerId: order.workerId,
+        orderId: order.id,
+        message: `Client cancelled the booking scheduled on ${order.date.toISOString().split("T")[0]}.`
+      }
+    });
+
+    // 5️⃣ Return success response
     return res.json({
       message: "Order canceled successfully",
       order: updated
@@ -52,10 +64,9 @@ orderStatus.post("/orders/:id/reschedule", userAuth, async (req: any, res: Respo
 
     const today = new Date();
     const selectedDate = new Date(new_date);
-    const onlyTime = new Date(`1970-01-01T${new_time}:00`);
     const finalDateTime = new Date(`${new_date}T${new_time}:00`);
 
-    // 🔍 Get existing order
+    // Get existing order
     const order = await prisma.workerOrder.findUnique({
       where: { id: orderId }
     });
@@ -64,42 +75,54 @@ orderStatus.post("/orders/:id/reschedule", userAuth, async (req: any, res: Respo
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // ❌ Allow rescheduling only if pending
+    // Only pending orders can be rescheduled
     if (order.Order_Status !== 2) {
       return res.status(400).json({ message: "Only pending orders can be rescheduled" });
     }
 
-    // 📅 No past dates
+    // Do not allow past dates
     if (selectedDate < new Date(today.toDateString())) {
       return res.status(400).json({ message: "You cannot reschedule to a past date" });
     }
 
-    // 🕒 Same day: must be future time
+    // If same day → ensure time is in future
     const isSameDay = selectedDate.toDateString() === today.toDateString();
     if (isSameDay && finalDateTime <= today) {
       return res.status(400).json({ message: "Reschedule time must be in the future" });
     }
 
-    // 🟡 Check slot availability (except cancelled ones)
+    // Check slot availability
     const existingSlot = await prisma.workerOrder.findFirst({
       where: {
         workerId: order.workerId,
         date: selectedDate,
-        time: onlyTime
+        time: finalDateTime,
+        NOT: { id: orderId }, // avoid blocking self
+        Order_Status: { not: 3 } // only active orders block
       }
     });
 
-    if (existingSlot && existingSlot.Order_Status !== 3 && existingSlot.id !== orderId) {
+    if (existingSlot) {
       return res.status(400).json({ message: "This time slot is already booked" });
     }
 
-    // ✔ Update order
+    // Update order
     const updated = await prisma.workerOrder.update({
       where: { id: orderId },
       data: {
         reschedule_comment: comment,
         date: selectedDate,
-        time: onlyTime,
+        time: finalDateTime,
+      }
+    });
+
+    // Send notification to client
+    await prisma.notification.create({
+      data: {
+        clientId: order.clientId,
+        workerId: order.workerId,
+        orderId: order.id,
+        message: `Worker rescheduled your booking to ${new_date} at ${new_time}`
       }
     });
 
@@ -113,6 +136,7 @@ orderStatus.post("/orders/:id/reschedule", userAuth, async (req: any, res: Respo
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 
 export default orderStatus;

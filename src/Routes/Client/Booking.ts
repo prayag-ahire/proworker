@@ -14,22 +14,21 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
     const today = new Date();
     const selectedDate = new Date(date);
 
-    // Convert TIME only
     const onlyTime = new Date(`1970-01-01T${time}:00`);
     const finalDateTime = new Date(`${date}T${time}:00`);
 
-    // Past date
+    // ❌ Past date check
     if (selectedDate < new Date(today.toDateString())) {
       return res.status(400).json({ message: "You cannot book for past dates." });
     }
 
-    // Same-day past time
+    // ❌ Same-day + past time
     const isSameDay = selectedDate.toDateString() === today.toDateString();
     if (isSameDay && finalDateTime <= today) {
       return res.status(400).json({ message: "Booking time must be in the future." });
     }
 
-    // Slot check
+    // ❌ Check if slot is already booked
     const existingOrder = await prisma.workerOrder.findFirst({
       where: {
         workerId,
@@ -38,35 +37,42 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
       }
     });
 
-    // Slot is blocked if order exists and status != cancelled
     if (existingOrder && existingOrder.Order_Status !== 3) {
       return res.status(400).json({ message: "Time slot is not available!" });
     }
 
-    // Create order
+    // ✔ Create booking
     const order = await prisma.workerOrder.create({
       data: {
         date: selectedDate,
         time: onlyTime,
-        Status: { connect: { id: 2 } }, // Pending
+        Order_Status: 2, // pending
         reschedule_comment: null,
-        worker: { connect: { id: workerId } },
-        client: { connect: { id: clientId } }
-      },
-      include: {
-        Status: true
+        workerId: workerId,
+        clientId: clientId
       }
     });
 
-    return res.json({ message: "Order created successfully", order });
+    // ✔ Notify worker
+    await prisma.notification.create({
+      data: {
+        clientId,
+        workerId,
+        orderId: order.id,
+        message: `New booking received for ${date} at ${time}`
+      }
+    });
+
+    return res.json({
+      message: "Order created successfully",
+      order
+    });
 
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
-
 
 
 export default Booking;

@@ -19,9 +19,9 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
 
     // 1. Find the order
     const order = await prisma.workerOrder.findUnique({
-      where: { id: orderId },
-      include: { worker: true, client: true }
+      where: { id: orderId }
     });
+
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -60,7 +60,8 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
     if (images.length > 0) {
       await prisma.reviewImage.createMany({
         data: images.map((url: string) => ({
-          review_Id: review.id,
+          reviewId: review.id,
+          workerId: order.workerId,
           img_URL: url
         }))
       });
@@ -70,11 +71,22 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
     if (videos.length > 0) {
       await prisma.reviewVideo.createMany({
         data: videos.map((url: string) => ({
-          review_Id: review.id,
+          reviewId: review.id,
+          workerId: order.workerId,
           video_URL: url
         }))
       });
     }
+
+    // 8. Send notification to worker
+    await prisma.notification.create({
+      data: {
+        clientId: clientId,
+        workerId: order.workerId,
+        orderId: orderId,
+        message: `You received a new review from a client.`
+      }
+    });
 
     return res.json({
       message: "Review submitted successfully",
@@ -87,26 +99,6 @@ ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) 
   }
 });
 
-ReviewRouter.get("/Review/my", userAuth, async (req: any, res: Response) => {
-  try {
-    const clientId = req.user.id;
-
-    const reviews = await prisma.review.findMany({
-      where: { clientId: clientId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        worker: { select: { Name: true, ImgURL: true } },
-        order: { select: { id: true, date: true, time: true } },
-      }
-    });
-
-    return res.json(reviews);
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
 
 ReviewRouter.get("/Review/:id", userAuth, async (req: any, res: Response) => {
   try {

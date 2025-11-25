@@ -22,6 +22,7 @@ model Client {
   Password          String
   worker_order      WorkerOrder[]
   review            Review[]
+  notification      Notification[]
 }
 
 enum AppLanguage {
@@ -67,6 +68,7 @@ model Worker {
   review_image        ReviewImage[]
   review_video        ReviewVideo[]
   review              Review[]
+  notification      Notification[]
 
   worker_settings     WorkerSettings?
   worker_schedule     WeekSchedule?
@@ -122,6 +124,20 @@ model MonthSchedule {
   note                 String?
 }
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  Int
+  worker    Worker   @relation(fields: [workerId], references: [id])
+  workerId  Int
+  order     WorkerOrder @relation(fields: [orderId], references: [id])
+  orderId   Int
+  message   String
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
+
 model WorkerTraining {
   id                  Int @id @default(autoincrement())
   worker              Worker @relation(fields: [workerId], references: [id])
@@ -150,6 +166,7 @@ model WorkerOrder {
   time                DateTime @db.Time()
   reschedule_comment  String?
   review              Review[]
+  notification        Notification[]
 }
 
 model WorkerImage {

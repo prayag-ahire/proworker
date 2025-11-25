@@ -135,6 +135,7 @@ schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response
 
 // GET /schedule/month?month=YYYY-MM
 // Returns all holiday entries for the month ONLY (no orders)
+// GET /schedule/month?month=YYYY-MM
 schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
@@ -148,8 +149,11 @@ schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) 
     const end = dayjs(`${month}-01`).endOf("month").toDate();
 
     const holidays = await prisma.monthSchedule.findMany({
-      where: { workerId: workerId, date: { gte: start, lte: end } },
-      orderBy: { date: "asc" }
+      where: { workerId, date: { gte: start, lte: end } },
+      orderBy: [
+        { date: "asc" },
+        { id: "asc" }
+      ]
     });
 
     return res.json({ month, holidays });
@@ -159,6 +163,7 @@ schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) 
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 
 // POST /schedule/month
@@ -171,27 +176,73 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
       return res.status(400).json({ message: "date is required in YYYY-MM-DD" });
     }
 
-    const parsed = dayjs(date).startOf("day").toDate();
+    const holidayDate = dayjs(date).startOf("day");
+    const today = dayjs().startOf("day");
 
+    // worker cannot pick past dates
+    if (holidayDate.isBefore(today)) {
+      return res.status(400).json({ message: "You cannot add a holiday for a past date" });
+    }
+
+    // check if holiday already exists
     const exists = await prisma.monthSchedule.findFirst({
-      where: { workerId: workerId, date: parsed }
+      where: { workerId, date: holidayDate.toDate() }
     });
 
     if (exists) {
       return res.status(400).json({ message: "Holiday already added for this date" });
     }
 
-    const created = await prisma.monthSchedule.create({
+    // find all orders on same date
+    const orders = await prisma.workerOrder.findMany({
+      where: {
+        workerId,
+        date: holidayDate.toDate(),
+        Order_Status: 2 // only pending orders
+      }
+    });
+
+    // cancel all bookings and notify clients
+    const notifications: any[] = [];
+    const canceledOrders: any[] = [];
+
+    for (const order of orders) {
+
+      // cancel the order
+      const updatedOrder = await prisma.workerOrder.update({
+        where: { id: order.id },
+        data: { Order_Status: 3 }
+      });
+
+      canceledOrders.push(updatedOrder);
+
+      // send notification
+      const note = await prisma.notification.create({
+        data: {
+          clientId: order.clientId,
+          workerId: workerId,
+          orderId: order.id,
+          message: "Your booking was canceled. Worker added a holiday. Please reschedule or cancel."
+        }
+      });
+
+      notifications.push(note);
+    }
+
+    // finally add the holiday
+    const holiday = await prisma.monthSchedule.create({
       data: {
-        worker: { connect: { id: workerId } },
-        date: parsed,
+        workerId,
+        date: holidayDate.toDate(),
         note: note ?? null
       }
     });
 
     return res.status(201).json({
-      message: "Holiday added",
-      holiday: created
+      message: "Holiday added successfully",
+      holiday,
+      canceledOrders,
+      notifications
     });
 
   } catch (err) {
@@ -199,6 +250,7 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 
 schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
@@ -210,10 +262,10 @@ schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Respons
       return res.status(400).json({ message: "Date must be YYYY-MM-DD" });
     }
 
-    const parsed = new Date(date);
+    const parsed = dayjs(date).startOf("day").toDate();
 
     const entry = await prisma.monthSchedule.findFirst({
-      where: { workerId: workerId, date: parsed }
+      where: { workerId, date: parsed }
     });
 
     if (!entry) {
