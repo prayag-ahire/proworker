@@ -10,16 +10,38 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
 }
+
+enum Gender { 
+  Male
+  Female
+  Other
+}
+
+model Client_User {
+  id             Int @id @default(autoincrement())
+  phone_no       String @unique
+  password       String
+  Profile_Completed Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  client         Client?
+  client_settings ClientSettings?
+}
+
 
 model Client {
   id                Int @id @default(autoincrement()) 
-  name              String
+  userId            Int      @unique
+  username          String
   ImgURL            String
-  Contact_number    String @unique
-  client_settings   ClientSettings?
-  Password          String
+  age               Int
+  email             String @unique
+  gender            Gender
+  Active_Status     Boolean @default(true)
+
+  user              Client_User @relation(fields: [userId], references: [id], onDelete: Cascade)
   worker_order      WorkerOrder[]
   review            Review[]
   notification      Notification[]
@@ -34,7 +56,7 @@ enum AppLanguage {
 
 model ClientSettings {
   id                Int @id @default(autoincrement())
-  client            Client @relation(fields: [clientId], references: [id])
+  client            Client_User @relation(fields: [clientId], references: [id])
   clientId          Int @unique
   ReferCode         Int
   ReferenceId       Int
@@ -48,29 +70,48 @@ model Status {
   WorkerOrder WorkerOrder[]
 }
 
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+
+model Worker_User {
+  id                 Int      @id @default(autoincrement())
+  phone_no           String   @unique
+  password           String
+  profileCompleted   Boolean  @default(false)
+  status             AccountStatus @default(ACTIVE)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  worker             Worker?
+  worker_settings    WorkerSettings?
+}
+
 
 model Worker {
   id                  Int @id @default(autoincrement())
-  Name                String
+  userId              Int      @unique
+  username            String
   ImgURL              String
-  Contact_number      String @unique
-  Rating              Decimal
+  Rating              Decimal  @default(0.0)
   profession          String
   Description         String
-  Charges_PerHour     Int
   Charges_PerVisit    Int
-  ReferCode           Int
-  ReferenceId         Int
-  Password            String
+  ReferCode           Int?
+  ReferenceId         Int?
   Active_Status       Boolean @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user                Worker_User @relation(fields: [userId], references: [id], onDelete: Cascade)
   worker_image        WorkerImage[]
   Worker_video        WorkerVideo[]
   review_image        ReviewImage[]
   review_video        ReviewVideo[]
   review              Review[]
-  notification      Notification[]
-
-  worker_settings     WorkerSettings?
+  notification        Notification[]
   worker_schedule     WeekSchedule?
   month_schedule      MonthSchedule[]
   worker_order        WorkerOrder[]
@@ -79,7 +120,7 @@ model Worker {
 
 model WorkerSettings {
   id                  Int @id @default(autoincrement())
-  worker              Worker @relation(fields: [workerId], references: [id])
+  worker              Worker_User @relation(fields: [workerId], references: [id])
   workerId            Int @unique
   AppLanguage         AppLanguage
   location            Location?

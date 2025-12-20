@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import { userAuth } from "../userAuth";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -9,58 +10,42 @@ const router = Router();
 // ====================== WORKER SIGNUP ======================
 router.post("/signup", async (req, res) => {
   try {
-    const { Name, Contect_number, Password } = req.body;
+    const { phone_no, password } = req.body;
 
-    // 1. Check if phone already registered
-    const exists = await prisma.worker.findUnique({ 
-      where: { Contact_number: Contect_number }
+    // Check if already exists
+    const exists = await prisma.worker_User.findUnique({
+      where: { phone_no }
     });
 
     if (exists) {
-      return res.status(400).json({ message: "Phone number already registered" });
+      return res.status(400).json({ message: "Phone already registered" });
     }
 
-    // 2. Hash password
-    const hashed = await bcrypt.hash(Password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Create worker
-    const worker = await prisma.worker.create({
+    // Create auth account
+    const user = await prisma.worker_User.create({
       data: {
-        Name,
-        Contact_number: Contect_number,
-        ImgURL: "",
-        Password: hashed,
-        Rating: 0,
-        profession: "",
-        Description: "",
-        Charges_PerHour: 0,
-        Charges_PerVisit: 0,
-        ReferCode: Math.floor(100000 + Math.random() * 900000),
-        ReferenceId: 0,
-      },
+        phone_no,
+        password: hashedPassword
+      }
     });
 
-    // 4. Create worker settings
-    await prisma.workerSettings.create({
-      data: {
-        workerId: worker.id,
-        AppLanguage: "English",
-        ReferCode: worker.ReferCode,
-        ReferenceId: 0,
-      },
-    });
-
-    // 5. JWT
+    // Token
     const token = jwt.sign(
-      { id: worker.id, role: "worker" },
+      { userId: user.id, role: "worker" },
       "SkillSecret",
       { expiresIn: "7d" }
     );
 
-    return res.json({ token, worker });
+    res.json({
+      token,
+      profileCompleted: user.profileCompleted
+    });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ message: "Signup failed" });
   }
 });
@@ -68,36 +53,85 @@ router.post("/signup", async (req, res) => {
 // ====================== WORKER LOGIN ======================
 router.post("/login", async (req, res) => {
   try {
-    const { Contect_number, Password } = req.body;
+    const { phone_no, password } = req.body;
 
-    // 1. Find worker
-    const worker = await prisma.worker.findUnique({
-      where: { Contact_number: Contect_number }
+    const user = await prisma.worker_User.findUnique({
+      where: { phone_no }
     });
 
-    if (!worker) {
-      return res.status(400).json({ message: "Worker not found" });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
 
-    // 2. Check password
-    const match = await bcrypt.compare(Password, worker.Password);
+    const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // 3. Generate token
     const token = jwt.sign(
-      { id: worker.id, role: "worker" },
+      { userId: user.id, role: "worker" },
       "SkillSecret",
       { expiresIn: "7d" }
     );
 
-    return res.json({ token, worker });
+    res.json({
+      token,
+      profileCompleted: user.profileCompleted
+    });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ message: "Login failed" });
   }
 });
+
+
+router.post("/workerProfile", userAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.userId;
+    const {
+      username,
+      ImgURL,
+      profession,
+      Description,
+      Charges_PerVisit
+    } = req.body;
+
+    // Create worker profile
+    const worker = await prisma.worker.create({
+      data: {
+        userId,
+        username,
+        ImgURL,
+        profession,
+        Description,
+        Charges_PerVisit: Number(Charges_PerVisit)
+      }
+    });
+
+    // Create worker settings
+    await prisma.workerSettings.create({
+      data: {
+        workerId: worker.id,
+        AppLanguage: "English",
+        ReferCode: Math.floor(100000 + Math.random() * 900000),
+        ReferenceId: 0
+      }
+    });
+
+    // Mark profile completed
+    await prisma.worker_User.update({
+      where: { id: userId },
+      data: { profileCompleted: true }
+    });
+
+    res.json(worker);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Profile creation failed" });
+  }
+});
+
 
 export default router;

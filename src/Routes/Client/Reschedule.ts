@@ -22,7 +22,7 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
 
     // Get order
     const order = await prisma.workerOrder.findUnique({
-      where: { id: orderId }
+      where: { id: orderId, clientId: clientId }
     });
 
     if (!order || order.clientId !== clientId) {
@@ -49,6 +49,7 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
     const slotTaken = await prisma.workerOrder.findFirst({
       where: {
         workerId: order.workerId,
+        clientId: clientId,
         date: selectedDate,
         time: finalDateTime,
         NOT: { id: orderId },
@@ -62,7 +63,7 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
 
     // Update booking
     const updated = await prisma.workerOrder.update({
-      where: { id: orderId },
+      where: { id: orderId, clientId: clientId },
       data: {
         reschedule_comment: comment,
         date: selectedDate,
@@ -99,7 +100,7 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
 
     // 1. Get order
     const order = await prisma.workerOrder.findUnique({
-      where: { id: orderId }
+      where: { id: orderId , clientId: clientId }
     });
 
     // 2. Check existence + authorization
@@ -114,7 +115,7 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
 
     // 4. Cancel the order
     const updated = await prisma.workerOrder.update({
-      where: { id: orderId },
+      where: { id: orderId , clientId: clientId },
       data: { Order_Status: 3 },
       select: {
         id: true,
