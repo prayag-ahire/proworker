@@ -15,7 +15,7 @@ clientOrders.get("/orders/my", userAuth, async (req: any, res: Response) => {
       include: {
         worker: {
           select: {
-            Name: true,
+            username: true,
             ImgURL: true,
             Description: true,   // profession
           }
@@ -54,7 +54,7 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
       include: {
         worker: {
           select: {
-            Name: true,
+            username: true,
             ImgURL: true,
             profession: true
           }
@@ -73,7 +73,7 @@ clientOrders.get("/orders/:id", userAuth, async (req: any, res: Response) => {
       date: order.date,
       time: order.time,
       worker: {
-        name: order.worker.Name,
+        name: order.worker.username,
         image: order.worker.ImgURL,
         profession: order.worker.profession,
       }

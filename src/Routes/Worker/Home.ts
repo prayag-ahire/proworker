@@ -25,12 +25,15 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
                     workerId: workerId,
                     date: new Date(todaysDate)
                 },
-                include: {
+                select:{
                     client: {
-                        include: {
-                            client_settings: true
+                        select: {
+                            username: true,
                         }
-                    }
+                    },
+                    Order_Status: true,
+                    date: true,
+                    time: true,
                 }
             });
 

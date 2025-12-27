@@ -14,12 +14,10 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
     where: { id: workerId },
     select: {
       id: true,
-      Name: true,
+      username: true,
       ImgURL: true,
-      Contact_number: true,
       Rating: true,
       Description: true,
-      Charges_PerHour: true,
       Charges_PerVisit: true,
 
       worker_image: {
@@ -96,12 +94,10 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
       data: dataToUpdate,
       select: {
         id: true,
-        Name: true,
+        username: true,
         ImgURL: true,
-        Contact_number: true,
         Rating: true,
         Description: true,
-        Charges_PerHour: true,
         Charges_PerVisit: true,
       }
     });

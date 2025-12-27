@@ -110,7 +110,7 @@ ReviewRouter.get("/Review/:id", userAuth, async (req: any, res: Response) => {
       include: {
         worker: {
           select: {
-            Name: true,
+            username: true,
             ImgURL: true,
           }
         },

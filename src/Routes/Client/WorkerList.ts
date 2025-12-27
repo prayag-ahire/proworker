@@ -38,10 +38,9 @@ workerlist.get("/workers", userAuth, async (req: any, res: Response) => {
       orderBy: { id: "desc" }, // newest workers first
       select: {
         id: true,
-        Name: true,
+        username: true,
         ImgURL: true,
         Rating: true,
-        Charges_PerHour: true,
         Charges_PerVisit: true
       }
     });
@@ -107,12 +106,11 @@ workerlist.get("/worker/:id", userAuth, async (req: any, res: Response) => {
       where: { id: workerId },
       select: {
         id: true,
-        Name: true,
+        username: true,
         ImgURL: true,
-        Contact_number: true,
+        // Contact_number: true,
         Rating: true,
         Description: true,
-        Charges_PerHour: true,
         Charges_PerVisit: true,
 
         worker_image: true,

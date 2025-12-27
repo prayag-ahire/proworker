@@ -14,12 +14,11 @@ client_Profile.get("/Profile/me", userAuth, async (req: any, res) => {
       where: { id: ClientId },
       select : {
         id: true,
-        name: true,
+        username: true,
         ImgURL: true,
-        Contact_number: true,
         age: true,
         email: true,
-        gender: true
+        gender: true,
       }
     });
 
