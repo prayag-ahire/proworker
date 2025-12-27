@@ -22,7 +22,7 @@ import review from './Routes/Client/Reviews';
 // Worker routes
 import workerHome from './Routes/Worker/Home';
 import workerOrders from './Routes/Worker/Orders';
-import worker_Profile from './Routes/Worker/Profile';
+import worker_Profile from './Routes/Worker/profile';
 import workerReschedule from './Routes/Worker/Reschedule';
 import worker_Settings from './Routes/Worker/settings';
 import workerAuth from './Routes/Worker/WorkerAuth';
