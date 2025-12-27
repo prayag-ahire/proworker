@@ -86,7 +86,6 @@ model Worker_User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   worker             Worker?
-  worker_settings    WorkerSettings?
 }
 
 
@@ -102,9 +101,9 @@ model Worker {
   ReferCode           Int?
   ReferenceId         Int?
   Active_Status       Boolean @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  settings            WorkerSettings? 
   user                Worker_User @relation(fields: [userId], references: [id], onDelete: Cascade)
   worker_image        WorkerImage[]
   Worker_video        WorkerVideo[]
@@ -120,7 +119,7 @@ model Worker {
 
 model WorkerSettings {
   id                  Int @id @default(autoincrement())
-  worker              Worker_User @relation(fields: [workerId], references: [id])
+  worker              Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
   workerId            Int @unique
   AppLanguage         AppLanguage
   location            Location?
