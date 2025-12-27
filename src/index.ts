@@ -15,7 +15,7 @@ import clientOrders from './Routes/Client/orders';
 import workerAvailability from './Routes/Client/WorkerAvailability';
 import Booking from './Routes/Client/Booking';
 import reschedule from './Routes/Client/Reschedule';
-import client_Profile from './Routes/Client/profile';
+import client_Profile from './Routes/Client/Profile';
 import client_Settings from './Routes/Client/settings';
 import review from './Routes/Client/Reviews';
 
