@@ -85,51 +85,61 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 router.post("/workerProfile", userAuth, async (req: any, res) => {
+  const userId = req.user.userId;
+  const {
+    username,
+    ImgURL,
+    profession,
+    Description,
+    Charges_PerVisit
+  } = req.body;
+
   try {
-    const userId = req.user.userId;
-    const {
-      username,
-      ImgURL,
-      profession,
-      Description,
-      Charges_PerVisit
-    } = req.body;
+    const worker = await prisma.$transaction(async (tx) => {
+      const worker = await tx.worker.create({
+        data: {
+          userId,
+          username,
+          ImgURL,
+          profession,
+          Description,
+          Charges_PerVisit: Number(Charges_PerVisit)
+        }
+      });
 
-    // Create worker profile
-    const worker = await prisma.worker.create({
-      data: {
-        userId,
-        username,
-        ImgURL,
-        profession,
-        Description,
-        Charges_PerVisit: Number(Charges_PerVisit)
-      }
-    });
+      await tx.workerSettings.create({
+        data: {
+          workerId: worker.id,
+          AppLanguage: "English",
+          ReferCode: Math.floor(100000 + Math.random() * 900000),
+          ReferenceId: 0
+        }
+      });
 
-    // Create worker settings
-    await prisma.workerSettings.create({
-      data: {
-        workerId: worker.id,
-        AppLanguage: "English",
-        ReferCode: Math.floor(100000 + Math.random() * 900000),
-        ReferenceId: 0
-      }
-    });
+      await tx.worker_User.update({
+        where: { id: userId },
+        data: { profileCompleted: true }
+      });
 
-    // Mark profile completed
-    await prisma.worker_User.update({
-      where: { id: userId },
-      data: { profileCompleted: true }
+      return worker;
     });
 
     res.json(worker);
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Profile creation failed" });
+  } catch (err: any) {
+    console.error("Worker profile creation failed:", err);
+
+    // Handle known Prisma errors cleanly
+    if (err.code === "P2002") {
+      return res.status(409).json({
+        message: "Worker profile already exists"
+      });
+    }
+
+    res.status(500).json({
+      message: "Profile creation failed"
+    });
   }
 });
 
