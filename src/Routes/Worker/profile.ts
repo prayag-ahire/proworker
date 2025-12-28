@@ -74,7 +74,7 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
 // Only update fields provided in the request body
 worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const {
       Name,
       ImgURL,
@@ -88,7 +88,7 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
     } = req.body;
 
     const dataToUpdate: any = {};
-    if (Name !== undefined) dataToUpdate.Name = Name;
+    if (Name !== undefined) dataToUpdate.username = Name;
     if (ImgURL !== undefined) dataToUpdate.ImgURL = ImgURL;
     if (Description !== undefined) dataToUpdate.Description = Description;
     if (Distance_charges !== undefined) dataToUpdate.Distance_charges = Distance_charges;
