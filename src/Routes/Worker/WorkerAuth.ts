@@ -86,7 +86,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/workerProfile", userAuth, async (req: any, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
   const {
     username,
     ImgURL,
