@@ -90,6 +90,9 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
   const {
     username,
     ImgURL,
+    Email,
+    Age,
+    gender,
     profession,
     Description,
     Charges_PerVisit
@@ -113,6 +116,9 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
         userId,
         username,
         ImgURL,
+        Email,
+        Age,
+        gender,
         profession,
         Description,
         Charges_PerVisit: Number(Charges_PerVisit),

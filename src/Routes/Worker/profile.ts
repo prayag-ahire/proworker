@@ -17,6 +17,10 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
       username: true,
       ImgURL: true,
       Rating: true,
+      Email: true,
+      Age: true,
+      gender: true,
+      profession: true,
       Description: true,
       Charges_PerVisit: true,
 
@@ -75,6 +79,10 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
     const {
       Name,
       ImgURL,
+      Email,
+      Age,
+      gender,
+      profession,
       Contect_number,
       Description,
       Charges_PerHour,
@@ -88,6 +96,10 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
     if (Description !== undefined) dataToUpdate.Description = Description;
     if (Charges_PerHour !== undefined) dataToUpdate.Charges_PerHour = Charges_PerHour;
     if (Charges_PerVisit !== undefined) dataToUpdate.Charges_PerVisit = Charges_PerVisit;
+    if (Email !== undefined) dataToUpdate.Email = Email;
+    if (Age !== undefined) dataToUpdate.Age = Age;
+    if (gender !== undefined) dataToUpdate.gender = gender;
+    if (profession !== undefined) dataToUpdate.profession = profession;
 
     const updated = await prisma.worker.update({
       where: { userId: workerId },
@@ -96,6 +108,10 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
         id: true,
         username: true,
         ImgURL: true,
+        Email: true,
+        Age: true,
+        gender: true,
+        profession: true,
         Rating: true,
         Description: true,
         Charges_PerVisit: true,
