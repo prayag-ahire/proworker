@@ -11,7 +11,7 @@ const worker_Settings = Router();
 // GET location only (location screen can call this)
 worker_Settings.get("/settings/me/location", userAuth, async (req: any, res: Response) => {
   try {
-    const userId = req.user.id; // Worker_User.id
+    const userId = req.user.userId; // Worker_User.id
 
     const worker = await prisma.worker.findUnique({
     where: { userId },
@@ -38,7 +38,7 @@ res.json(worker.settings.location ?? null);
 // PUT upsert location (set / update)
 worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const { latitude, longitude } = req.body;
 
     if (typeof latitude !== "number" || typeof longitude !== "number") {
@@ -102,7 +102,7 @@ worker_Settings.get("/settings/me/language", userAuth, async (req: any, res: Res
 // PUT language
 worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const { App_Language: appLanguage } = req.body;
     
     if (!appLanguage || !Object.values(appLanguage).includes(appLanguage)) {
@@ -143,10 +143,10 @@ worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
 // GET referral code only (Invite screen)
 worker_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Response) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const worker = await prisma.worker.findUnique({
-      where: { userId: req.user.id },
+      where: { userId: userId },
       select: {
         settings: {
           select: {
@@ -172,7 +172,7 @@ return res.json(worker.settings);
 // GET training list + video details
 worker_Settings.get("/settings/me/training", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const training = await prisma.workerTraining.findMany({
       where: { workerId: workerId },
       include: { video: true },
@@ -187,7 +187,7 @@ worker_Settings.get("/settings/me/training", userAuth, async (req: any, res: Res
 // PUT update training status for a specific training record
 worker_Settings.put("/settings/me/training/:id", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const trainingId = Number(req.params.id);
     const { Status } = req.body;
 
