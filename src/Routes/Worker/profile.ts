@@ -8,7 +8,7 @@ const worker_profile = Router();
 // ------------------ GET profile (for Profile screen) ------------------
 worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
 
     const data = await prisma.worker.findUnique({
     where: { id: workerId },
@@ -90,7 +90,7 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
     if (Charges_PerVisit !== undefined) dataToUpdate.Charges_PerVisit = Charges_PerVisit;
 
     const updated = await prisma.worker.update({
-      where: { id: workerId },
+      where: { userId: workerId },
       data: dataToUpdate,
       select: {
         id: true,
@@ -215,3 +215,6 @@ worker_profile.delete("/profile/me/videos/:id", userAuth, async (req: any, res: 
 
 
 export default worker_profile;
+
+
+// the user profile is working fine now

@@ -223,3 +223,5 @@ worker_Settings.put("/settings/me/training/:id", userAuth, async (req: any, res:
 
 
 export default worker_Settings;
+
+// the language and invite tested and properly working
