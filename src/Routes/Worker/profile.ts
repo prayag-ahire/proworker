@@ -13,7 +13,6 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
     const data = await prisma.worker.findUnique({
     where: { userId: workerId },
     select: {
-      id: true,
       username: true,
       ImgURL: true,
       Rating: true,
@@ -83,18 +82,16 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
       Age,
       gender,
       profession,
-      Contect_number,
       Description,
-      Charges_PerHour,
+      Distance_charges,
       Charges_PerVisit,
     } = req.body;
 
     const dataToUpdate: any = {};
     if (Name !== undefined) dataToUpdate.Name = Name;
     if (ImgURL !== undefined) dataToUpdate.ImgURL = ImgURL;
-    if (Contect_number !== undefined) dataToUpdate.Contect_number = Contect_number;
     if (Description !== undefined) dataToUpdate.Description = Description;
-    if (Charges_PerHour !== undefined) dataToUpdate.Charges_PerHour = Charges_PerHour;
+    if (Distance_charges !== undefined) dataToUpdate.Distance_charges = Distance_charges;
     if (Charges_PerVisit !== undefined) dataToUpdate.Charges_PerVisit = Charges_PerVisit;
     if (Email !== undefined) dataToUpdate.Email = Email;
     if (Age !== undefined) dataToUpdate.Age = Age;
@@ -105,7 +102,6 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
       where: { userId: workerId },
       data: dataToUpdate,
       select: {
-        id: true,
         username: true,
         ImgURL: true,
         Email: true,
@@ -114,6 +110,7 @@ worker_profile.put("/profile/me", userAuth, async (req: any, res: Response) => {
         profession: true,
         Rating: true,
         Description: true,
+        Distance_charges: true,
         Charges_PerVisit: true,
       }
     });

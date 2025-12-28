@@ -65,6 +65,7 @@ model Worker {
   Rating           Decimal          @default(0.0)
   Description      String
   Charges_PerVisit Int
+  Distance_charges Int
   ReferCode        Int?
   ReferenceId      Int?
   profession       String

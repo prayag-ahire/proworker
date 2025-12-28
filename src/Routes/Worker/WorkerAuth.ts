@@ -95,7 +95,8 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
     gender,
     profession,
     Description,
-    Charges_PerVisit
+    Charges_PerVisit,
+    Distance_charges
   } = req.body;
 
   try {
@@ -122,6 +123,7 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
         profession,
         Description,
         Charges_PerVisit: Number(Charges_PerVisit),
+        Distance_charges: Number(Distance_charges),
         settings: {
           create: {
             AppLanguage: "English",
