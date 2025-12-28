@@ -96,7 +96,8 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
     profession,
     Description,
     Charges_PerVisit,
-    Distance_charges
+    Distance_charges,
+    ReferenceId
   } = req.body;
 
   try {
@@ -128,7 +129,7 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
           create: {
             AppLanguage: "English",
             ReferCode: Math.floor(100000 + Math.random() * 900000),
-            ReferenceId: 0
+            ReferenceId: ReferenceId || 0
           }
         }
       }
