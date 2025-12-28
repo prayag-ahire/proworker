@@ -21,6 +21,7 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
       gender: true,
       profession: true,
       Description: true,
+      Distance_charges: true,
       Charges_PerVisit: true,
 
       worker_image: {

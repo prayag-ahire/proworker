@@ -17,7 +17,7 @@ const worker_Settings = Router();
 // GET location only (location screen can call this)
 worker_Settings.get("/settings/me/location", userAuth, async (req: any, res: Response) => {
   try {
-    const userId = req.user.userId; // Worker_User.id
+    const userId = req.user.userId; 
 
     const worker = await prisma.worker.findUnique({
     where: { userId },
@@ -53,17 +53,24 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
       });
     }
 
-    const settings = await prisma.workerSettings.findUnique({
-      where: { workerId: workerId },
+    const settings = await prisma.worker.findUnique({
+      where: { userId: workerId },
+      select: {
+        settings: {
+          select: { id: true }
+        }
+      }
     });
 
-    if (!settings) return res.status(404).json({ message: "Worker Settings not found" });
+    if (!settings || !settings.settings || typeof settings.settings.id !== "number") {
+      return res.status(404).json({ message: "Worker Settings not found" });
+    }
 
     const location = await prisma.location.upsert({
-      where: { workerSettingsId: settings.id },
+      where: { workerSettingsId: settings.settings.id },
       update: { latitude, longitude },
       create: {
-        workerSettingsId: settings.id,
+        workerSettingsId: settings.settings.id,
         latitude,
         longitude,
       },
