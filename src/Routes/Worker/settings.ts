@@ -2,24 +2,35 @@
 import { PrismaClient } from "@prisma/client";
 import { Router, Response } from "express";
 import { userAuth } from "../userAuth";
+import { tr } from "zod/v4/locales";
 
 const prisma = new PrismaClient();
 const worker_Settings = Router();
 
-// ------------------ LOCATION endpoints (Location screen) ------------------
+// LOCATION endpoints (Location screen)
 // GET location only (location screen can call this)
 worker_Settings.get("/settings/me/location", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
-    const settings = await prisma.workerSettings.findUnique({
-      where: { workerId: workerId },
-      include: { location: true },
-    });
-    if (!settings) return res.status(404).json({ message: "Settings not found" });
+    const userId = req.user.id; // Worker_User.id
 
-    res.json(settings.location ?? null);
+    const worker = await prisma.worker.findUnique({
+    where: { userId },
+    select: {
+      settings: {
+        select: { location: true }
+        }
+      }
+    });
+
+if (!worker || !worker.settings) {
+  return res.status(404).json({ message: "Settings not found" });
+}
+
+res.json(worker.settings.location ?? null);
+
+
   } catch (err) {
-    console.error(err);
+    console.error("Get location error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -30,14 +41,17 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
     const workerId = req.user.id;
     const { latitude, longitude } = req.body;
 
-    if (latitude === undefined || longitude === undefined) {
-      return res.status(400).json({ message: "latitude & longitude are required" });
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      return res.status(400).json({
+        message: "latitude and longitude must be numbers",
+      });
     }
 
     const settings = await prisma.workerSettings.findUnique({
       where: { workerId: workerId },
     });
-    if (!settings) return res.status(404).json({ message: "Settings not found" });
+
+    if (!settings) return res.status(404).json({ message: "Worker Settings not found" });
 
     const location = await prisma.location.upsert({
       where: { workerSettingsId: settings.id },
@@ -50,8 +64,9 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
     });
 
     res.json(location);
+
   } catch (err) {
-    console.error(err);
+    console.error("Update location error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -60,36 +75,66 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
 // GET language (small call)
 worker_Settings.get("/settings/me/language", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
-    const settings = await prisma.workerSettings.findUnique({
-      where: { workerId: workerId },
-      select: { AppLanguage: true },
+    const userId = req.user.id;
+
+    const worker = await prisma.worker.findUnique({
+      where: { userId },
+      select: {
+        settings: {
+          select: { AppLanguage: true },
+        },
+      },
     });
 
-    if (!settings) return res.status(404).json({ message: "Settings not found" });
-    res.json(settings);
+    if (!worker || !worker.settings) {
+      return res.status(404).json({ message: "Settings not found" });
+    }
+
+    res.json(worker.settings);
+
   } catch (err) {
-    console.error(err);
+    console.error("Get language error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // PUT language
 worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.id;
-    const { App_Language } = req.body;
-    if (!App_Language) return res.status(400).json({ message: "App_Language is required" });
+    const { App_Language: appLanguage } = req.body;
+    
+    if (!appLanguage || !Object.values(appLanguage).includes(appLanguage)) {
+        return res.status(400).json({
+          message: "Valid AppLanguage is required",
+        });
+      }
+
+       const settings = await prisma.worker.findUnique({
+        where: { userId: workerId },
+        select: {
+          settings: {
+            select: { id: true }
+          }
+        }
+      });
+
+      if (!settings) {
+        return res.status(404).json({
+          message: "Worker settings not found",
+        });
+      }
 
     const update = await prisma.workerSettings.update({
-      where: { workerId: workerId },
-      data: { AppLanguage: App_Language },
+      where: { id: settings.settings?.id },
+      data: { AppLanguage: appLanguage },
       select: { AppLanguage: true },
     });
 
     res.json(update);
   } catch (err) {
-    console.error(err);
+    console.error("Update language error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -98,16 +143,27 @@ worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
 // GET referral code only (Invite screen)
 worker_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
-    const settings = await prisma.workerSettings.findUnique({
-      where: { workerId: workerId },
-      select: { ReferCode: true },
-    });
-    if (!settings) return res.status(404).json({ message: "Settings not found" });
+    const userId = req.user.id;
 
-    res.json(settings); // { ReferCode: 123456 }
+    const worker = await prisma.worker.findUnique({
+      where: { userId: req.user.id },
+      select: {
+        settings: {
+          select: {
+            ReferCode:true,
+          }
+        }
+      }
+    });
+
+if (!worker || !worker.settings) {
+  return res.status(404).json({ message: "Settings not found" });
+}
+
+return res.json(worker.settings);
+
   } catch (err) {
-    console.error(err);
+    console.error("Get invite code error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });

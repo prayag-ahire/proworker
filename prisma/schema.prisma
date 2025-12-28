@@ -91,7 +91,7 @@ model Worker_User {
 
 model Worker {
   id                  Int @id @default(autoincrement())
-  userId              Int      @unique
+  userId              Int      @unique // FK to Worker_User
   username            String
   ImgURL              String
   Rating              Decimal  @default(0.0)
