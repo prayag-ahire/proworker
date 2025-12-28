@@ -2,7 +2,13 @@
 import { PrismaClient } from "@prisma/client";
 import { Router, Response } from "express";
 import { userAuth } from "../userAuth";
-import { tr } from "zod/v4/locales";
+
+enum App_Language{
+  English,
+  Hindi,
+  Marathi,
+  Gujarati
+}
 
 const prisma = new PrismaClient();
 const worker_Settings = Router();
@@ -105,7 +111,7 @@ worker_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
     const workerId = req.user.userId;
     const { App_Language: appLanguage } = req.body;
     
-    if (!appLanguage || !Object.values(appLanguage).includes(appLanguage)) {
+    if (!appLanguage || !Object.values(App_Language).includes(appLanguage)) {
         return res.status(400).json({
           message: "Valid AppLanguage is required",
         });
