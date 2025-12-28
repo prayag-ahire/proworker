@@ -75,7 +75,7 @@ worker_Settings.put("/settings/me/location", userAuth, async (req: any, res: Res
 // GET language (small call)
 worker_Settings.get("/settings/me/language", userAuth, async (req: any, res: Response) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const worker = await prisma.worker.findUnique({
       where: { userId },

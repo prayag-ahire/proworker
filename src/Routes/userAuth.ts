@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 interface JwtPayload {
-  id: number;
+  userId: number;
   role: string;
 }
 
@@ -29,8 +29,7 @@ export const userAuth = (
       process.env.JWT_SECRET || "SkillSecret"
     ) as JwtPayload;
 
-    // Optional role check (future-proof)
-    if (!decoded.id) {
+    if (!decoded.userId) {
       return res.status(401).json({ msg: "Invalid token payload" });
     }
 
