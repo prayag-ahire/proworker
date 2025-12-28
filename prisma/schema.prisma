@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,38 +7,234 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Gender { 
+model Client_User {
+  id                Int             @id @default(autoincrement())
+  phone_no          String          @unique
+  password          String
+  Profile_Completed Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  client            Client?
+  client_settings   ClientSettings?
+}
+
+model Client {
+  id            Int            @id @default(autoincrement())
+  ImgURL        String
+  Active_Status Boolean        @default(true)
+  age           Int
+  email         String         @unique
+  gender        Gender
+  userId        Int            @unique
+  username      String
+  user          Client_User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification  Notification[]
+  review        Review[]
+  worker_order  WorkerOrder[]
+}
+
+model ClientSettings {
+  id          Int         @id @default(autoincrement())
+  clientId    Int         @unique
+  ReferCode   Int
+  ReferenceId Int
+  AppLanguage AppLanguage
+  client      Client_User @relation(fields: [clientId], references: [id])
+}
+
+model Status {
+  id          Int           @id @default(autoincrement())
+  status_name String        @unique
+  WorkerOrder WorkerOrder[]
+}
+
+model Worker_User {
+  id               Int           @id @default(autoincrement())
+  phone_no         String        @unique
+  password         String
+  profileCompleted Boolean       @default(false)
+  status           AccountStatus @default(ACTIVE)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  worker           Worker?
+}
+
+model Worker {
+  id               Int              @id @default(autoincrement())
+  ImgURL           String
+  Rating           Decimal          @default(0.0)
+  Description      String
+  Charges_PerVisit Int
+  ReferCode        Int?
+  ReferenceId      Int?
+  profession       String
+  Active_Status    Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  userId           Int              @unique
+  username         String
+  Age              Int
+  Email            String           @unique
+  gender           gender
+  month_schedule   MonthSchedule[]
+  notification     Notification[]
+  review           Review[]
+  review_image     ReviewImage[]
+  review_video     ReviewVideo[]
+  worker_schedule  WeekSchedule?
+  user             Worker_User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  worker_image     WorkerImage[]
+  worker_order     WorkerOrder[]
+  settings         WorkerSettings?
+  worker_training  WorkerTraining[]
+  Worker_video     WorkerVideo[]
+}
+
+model WorkerSettings {
+  id          Int         @id @default(autoincrement())
+  workerId    Int         @unique
+  AppLanguage AppLanguage
+  ReferCode   Int
+  ReferenceId Int
+  location    Location?
+  worker      Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
+}
+
+model Location {
+  id               Int            @id @default(autoincrement())
+  latitude         Float
+  longitude        Float
+  workerSettingsId Int            @unique
+  worker_settings  WorkerSettings @relation(fields: [workerSettingsId], references: [id])
+}
+
+model WeekSchedule {
+  id              Int       @id @default(autoincrement())
+  workerId        Int       @unique
+  Start_Sunday    DateTime? @db.Time(6)
+  End_Sunday      DateTime? @db.Time(6)
+  Start_Monday    DateTime? @db.Time(6)
+  End_Monday      DateTime? @db.Time(6)
+  Start_Tuesday   DateTime? @db.Time(6)
+  End_Tuesday     DateTime? @db.Time(6)
+  Start_Wednesday DateTime? @db.Time(6)
+  End_Wednesday   DateTime? @db.Time(6)
+  Start_Thursday  DateTime? @db.Time(6)
+  End_Thursday    DateTime? @db.Time(6)
+  Start_Friday    DateTime? @db.Time(6)
+  End_Friday      DateTime? @db.Time(6)
+  Start_Saturday  DateTime? @db.Time(6)
+  End_Saturday    DateTime? @db.Time(6)
+  worker          Worker    @relation(fields: [workerId], references: [id])
+}
+
+model MonthSchedule {
+  id       Int      @id @default(autoincrement())
+  workerId Int
+  date     DateTime @db.Date
+  note     String?
+  worker   Worker   @relation(fields: [workerId], references: [id])
+}
+
+model Notification {
+  id        Int         @id @default(autoincrement())
+  clientId  Int
+  workerId  Int
+  orderId   Int
+  message   String
+  createdAt DateTime    @default(now())
+  isRead    Boolean     @default(false)
+  client    Client      @relation(fields: [clientId], references: [id])
+  order     WorkerOrder @relation(fields: [orderId], references: [id])
+  worker    Worker      @relation(fields: [workerId], references: [id])
+}
+
+model WorkerTraining {
+  id       Int           @id @default(autoincrement())
+  workerId Int
+  videoId  Int
+  Status   Boolean
+  video    TrainingVideo @relation(fields: [videoId], references: [id])
+  worker   Worker        @relation(fields: [workerId], references: [id])
+}
+
+model TrainingVideo {
+  id              Int              @id @default(autoincrement())
+  Name            String
+  Video_URL       String
+  worker_training WorkerTraining[]
+}
+
+model WorkerOrder {
+  id                 Int            @id @default(autoincrement())
+  workerId           Int
+  clientId           Int
+  date               DateTime       @db.Date
+  time               DateTime       @db.Time(6)
+  reschedule_comment String?
+  Order_Status       Int
+  notification       Notification[]
+  review             Review[]
+  Status             Status         @relation(fields: [Order_Status], references: [id])
+  client             Client         @relation(fields: [clientId], references: [id])
+  worker             Worker         @relation(fields: [workerId], references: [id])
+}
+
+model WorkerImage {
+  id       Int    @id @default(autoincrement())
+  workerId Int
+  name     String
+  img_URL  String
+  worker   Worker @relation(fields: [workerId], references: [id])
+}
+
+model WorkerVideo {
+  id        Int    @id @default(autoincrement())
+  workerId  Int
+  Name      String
+  Video_URL String
+  worker    Worker @relation(fields: [workerId], references: [id])
+}
+
+model Review {
+  id        Int           @id @default(autoincrement())
+  Name      String
+  Comment   String
+  createdAt DateTime      @default(now())
+  clientId  Int
+  orderId   Int
+  workerId  Int
+  client    Client        @relation(fields: [clientId], references: [id])
+  order     WorkerOrder   @relation(fields: [orderId], references: [id])
+  worker    Worker        @relation(fields: [workerId], references: [id])
+  images    ReviewImage[]
+  videos    ReviewVideo[]
+}
+
+model ReviewImage {
+  id       Int    @id @default(autoincrement())
+  reviewId Int
+  img_URL  String
+  workerId Int
+  name     String
+  review   Review @relation(fields: [reviewId], references: [id])
+  worker   Worker @relation(fields: [workerId], references: [id])
+}
+
+model ReviewVideo {
+  id        Int    @id @default(autoincrement())
+  reviewId  Int
+  video_URL String
+  workerId  Int
+  name      String
+  review    Review @relation(fields: [reviewId], references: [id])
+  worker    Worker @relation(fields: [workerId], references: [id])
+}
+
+enum Gender {
   Male
   Female
   Other
-}
-
-model Client_User {
-  id             Int @id @default(autoincrement())
-  phone_no       String @unique
-  password       String
-  Profile_Completed Boolean @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  client         Client?
-  client_settings ClientSettings?
-}
-
-
-model Client {
-  id                Int @id @default(autoincrement()) 
-  userId            Int      @unique
-  username          String
-  ImgURL            String
-  age               Int
-  email             String @unique
-  gender            Gender
-  Active_Status     Boolean @default(true)
-
-  user              Client_User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  worker_order      WorkerOrder[]
-  review            Review[]
-  notification      Notification[]
 }
 
 enum AppLanguage {
@@ -52,22 +242,6 @@ enum AppLanguage {
   Hindi
   Marathi
   Gujarati
-}
-
-model ClientSettings {
-  id                Int @id @default(autoincrement())
-  client            Client_User @relation(fields: [clientId], references: [id])
-  clientId          Int @unique
-  ReferCode         Int
-  ReferenceId       Int
-  AppLanguage       AppLanguage
-}
-
-
-model Status {
-  id          Int     @id @default(autoincrement())
-  status_name String  @unique
-  WorkerOrder WorkerOrder[]
 }
 
 enum AccountStatus {
@@ -79,191 +253,4 @@ enum AccountStatus {
 enum gender {
   MALE
   Female
-}
-
-
-model Worker_User {
-  id                 Int      @id @default(autoincrement())
-  phone_no           String   @unique
-  password           String
-  profileCompleted   Boolean  @default(false)
-  status             AccountStatus @default(ACTIVE)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  worker             Worker?
-}
-
-
-model Worker {
-  id                  Int @id @default(autoincrement())
-  userId              Int      @unique // FK to Worker_User
-  username            String
-  ImgURL              String
-  Email               String   @unique
-  Age                 Int 
-  gender              gender
-  Rating              Decimal  @default(0.0)
-  profession          String
-  Description         String
-  Charges_PerVisit    Int
-  ReferCode           Int?
-  ReferenceId         Int?
-  Active_Status       Boolean @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  settings            WorkerSettings? 
-  user                Worker_User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  worker_image        WorkerImage[]
-  Worker_video        WorkerVideo[]
-  review_image        ReviewImage[]
-  review_video        ReviewVideo[]
-  review              Review[]
-  notification        Notification[]
-  worker_schedule     WeekSchedule?
-  month_schedule      MonthSchedule[]
-  worker_order        WorkerOrder[]
-  worker_training     WorkerTraining[]
-}
-
-model WorkerSettings {
-  id                  Int @id @default(autoincrement())
-  worker              Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  workerId            Int @unique
-  AppLanguage         AppLanguage
-  location            Location?
-  ReferCode           Int
-  ReferenceId         Int
-}
-
-
-model Location {
-  id                  Int @id @default(autoincrement())
-  worker_settings     WorkerSettings @relation(fields: [workerSettingsId], references: [id])
-  workerSettingsId    Int @unique
-  latitude            Float
-  longitude           Float
-}
-
-model WeekSchedule {
-  id                   Int     @id @default(autoincrement())
-  worker               Worker  @relation(fields: [workerId], references: [id])
-  workerId             Int @unique
-  Start_Sunday         DateTime? @db.Time()
-  End_Sunday           DateTime? @db.Time()
-  Start_Monday         DateTime? @db.Time()
-  End_Monday           DateTime? @db.Time()
-  Start_Tuesday        DateTime? @db.Time()
-  End_Tuesday          DateTime? @db.Time()
-  Start_Wednesday      DateTime? @db.Time()
-  End_Wednesday        DateTime? @db.Time()
-  Start_Thursday       DateTime? @db.Time()
-  End_Thursday         DateTime? @db.Time()
-  Start_Friday         DateTime? @db.Time()
-  End_Friday           DateTime? @db.Time()
-  Start_Saturday       DateTime? @db.Time()
-  End_Saturday         DateTime? @db.Time()
-}
-
-model MonthSchedule {
-  id                   Int      @id @default(autoincrement())
-  worker               Worker   @relation(fields: [workerId], references: [id])
-  workerId             Int
-  date                 DateTime @db.Date
-  note                 String?
-}
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  client    Client   @relation(fields: [clientId], references: [id])
-  clientId  Int
-  worker    Worker   @relation(fields: [workerId], references: [id])
-  workerId  Int
-  order     WorkerOrder @relation(fields: [orderId], references: [id])
-  orderId   Int
-  message   String
-  createdAt DateTime @default(now())
-  isRead    Boolean  @default(false)
-}
-
-
-model WorkerTraining {
-  id                  Int @id @default(autoincrement())
-  worker              Worker @relation(fields: [workerId], references: [id])
-  workerId            Int
-  video               TrainingVideo @relation(fields: [videoId], references: [id])
-  videoId             Int
-  Status              Boolean
-}
-
-model TrainingVideo {
-  id                  Int @id @default(autoincrement())
-  Name                String
-  Video_URL           String
-  worker_training     WorkerTraining[]
-}
-
-model WorkerOrder {
-  id                  Int @id @default(autoincrement())
-  worker              Worker @relation(fields: [workerId], references: [id])
-  workerId            Int
-  client              Client @relation(fields: [clientId], references: [id])
-  clientId            Int
-  Status              Status @relation(fields: [Order_Status], references: [id])
-  Order_Status        Int 
-  date                DateTime @db.Date
-  time                DateTime @db.Time()
-  reschedule_comment  String?
-  review              Review[]
-  notification        Notification[]
-}
-
-model WorkerImage {
-  id            Int @id @default(autoincrement())
-  worker        Worker @relation(fields: [workerId], references: [id])
-  workerId      Int
-  name          String
-  img_URL       String
-}
-
-model WorkerVideo {
-  id            Int @id @default(autoincrement())
-  worker        Worker @relation(fields: [workerId], references: [id])
-  workerId      Int
-  Name          String
-  Video_URL     String
-}
-
-model Review {
-  id            Int @id @default(autoincrement())
-  Name          String
-  Comment       String
-  worker        Worker @relation(fields: [workerId], references: [id])
-  workerId      Int
-  client        Client @relation(fields: [clientId], references: [id])
-  clientId      Int
-  order         WorkerOrder @relation(fields: [orderId], references: [id])
-  orderId       Int
-  createdAt     DateTime @default(now())
-  images        ReviewImage[]
-  videos        ReviewVideo[]
-}
-
-model ReviewImage {
-  id        Int     @id @default(autoincrement())
-  name      String
-  review    Review  @relation(fields: [reviewId], references: [id])
-  reviewId  Int
-  img_URL   String
-  worker    Worker  @relation(fields: [workerId], references: [id])
-  workerId  Int
-}
-
-model ReviewVideo {
-  id        Int     @id @default(autoincrement())
-  name      String
-  review    Review  @relation(fields: [reviewId], references: [id])
-  reviewId  Int
-  video_URL String
-  worker    Worker  @relation(fields: [workerId], references: [id])
-  workerId  Int
 }
