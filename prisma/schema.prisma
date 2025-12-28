@@ -76,6 +76,11 @@ enum AccountStatus {
   BLOCKED
 }
 
+enum gender {
+  MALE
+  Female
+}
+
 
 model Worker_User {
   id                 Int      @id @default(autoincrement())
@@ -94,6 +99,9 @@ model Worker {
   userId              Int      @unique // FK to Worker_User
   username            String
   ImgURL              String
+  Email               String   @unique
+  Age                 Int 
+  gender              gender
   Rating              Decimal  @default(0.0)
   profession          String
   Description         String
