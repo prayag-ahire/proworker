@@ -11,7 +11,7 @@ worker_profile.get("/profile/me", userAuth, async (req: any, res: Response) => {
     const workerId = req.user.userId;
 
     const data = await prisma.worker.findUnique({
-    where: { id: workerId },
+    where: { userId: workerId },
     select: {
       id: true,
       username: true,
