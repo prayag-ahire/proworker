@@ -199,8 +199,19 @@ schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) 
     const start = dayjs(`${month}-01`).startOf("month").toDate();
     const end = dayjs(`${month}-01`).endOf("month").toDate();
 
+    const worker = await prisma.worker_User.findUnique({
+      where: { id: workerId },
+      select: {
+        worker: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
+
     const holidays = await prisma.monthSchedule.findMany({
-      where: { workerId, date: { gte: start, lte: end } },
+      where: { workerId: worker?.worker?.id, date: { gte: start, lte: end } },
       orderBy: [
         { date: "asc" },
         { id: "asc" }
@@ -235,9 +246,19 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
       return res.status(400).json({ message: "You cannot add a holiday for a past date" });
     }
 
+    const worker = await prisma.worker_User.findUnique({
+      where: { id: workerId },
+      select: {
+        worker: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
     // check if holiday already exists
     const exists = await prisma.monthSchedule.findFirst({
-      where: { workerId, date: holidayDate.toDate() }
+      where: { workerId: worker?.worker?.id, date: holidayDate.toDate() }
     });
 
     if (exists) {
@@ -247,7 +268,7 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
     // find all orders on same date
     const orders = await prisma.workerOrder.findMany({
       where: {
-        workerId,
+        workerId: worker?.worker?.id,
         date: holidayDate.toDate(),
         Order_Status: 2 // only pending orders
       }
@@ -283,7 +304,7 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
     // finally add the holiday
     const holiday = await prisma.monthSchedule.create({
       data: {
-        workerId,
+        workerId: worker?.worker?.id!,
         date: holidayDate.toDate(),
         note: note ?? null
       }
