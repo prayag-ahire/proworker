@@ -154,7 +154,23 @@ schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response
         data: {
           worker: { connect: { id: worker?.worker?.id } }, // Prisma sets workerId automatically
           ...dataToSave
-        }
+        },
+        select: {
+        Start_Sunday: true,
+        End_Sunday: true,
+        Start_Monday: true,
+        End_Monday: true,
+        Start_Tuesday: true,
+        End_Tuesday: true,
+        Start_Wednesday: true,
+        End_Wednesday: true,
+        Start_Thursday: true,
+        End_Thursday: true,
+        Start_Friday: true,
+        End_Friday: true,
+        Start_Saturday: true,
+        End_Saturday: true
+      }
       });
     }
 
