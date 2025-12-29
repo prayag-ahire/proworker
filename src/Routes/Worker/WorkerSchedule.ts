@@ -19,8 +19,36 @@ function parseTimeOrNull(t?: string | null) {
 schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
     const workerId = req.user.userId;
+
+    const worker = await prisma.worker_User.findUnique({
+      where: { id: workerId },
+      select: {
+        worker: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
+
     const schedule = await prisma.weekSchedule.findUnique({
-      where: { workerId: workerId }
+      where: { workerId: worker?.worker?.id },
+      select: {
+        Start_Sunday: true,
+        End_Sunday: true,
+        Start_Monday: true,
+        End_Monday: true,
+        Start_Tuesday: true,
+        End_Tuesday: true,
+        Start_Wednesday: true,
+        End_Wednesday: true,
+        Start_Thursday: true,
+        End_Thursday: true,
+        Start_Friday: true,
+        End_Friday: true,
+        Start_Saturday: true,
+        End_Saturday: true
+      }
     });
     return res.json({ schedule });
   } catch (err) {
@@ -97,9 +125,19 @@ schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response
       }
     }
 
+    const worker = await prisma.worker_User.findUnique({
+      where: { id: workerId },
+      select: {
+        worker: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
     // Check if schedule exists
     const existing = await prisma.weekSchedule.findUnique({
-      where: { workerId }
+      where: { workerId: worker?.worker?.id }
     });
 
     let result;
@@ -107,14 +145,14 @@ schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response
     if (existing) {
       // Update only the provided fields
       result = await prisma.weekSchedule.update({
-        where: { workerId },
+        where: {  workerId: worker?.worker?.id },
         data: dataToSave
       });
     } else {
       // Create — only relation + time fields allowed
       result = await prisma.weekSchedule.create({
         data: {
-          worker: { connect: { id: workerId } }, // Prisma sets workerId automatically
+          worker: { connect: { id: worker?.worker?.id } }, // Prisma sets workerId automatically
           ...dataToSave
         }
       });
