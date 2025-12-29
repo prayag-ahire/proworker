@@ -16,6 +16,7 @@ model Client_User {
   updatedAt         DateTime        @updatedAt
   client            Client?
   client_settings   ClientSettings?
+  sessions          ClientSession[]
 }
 
 model Client {
@@ -49,14 +50,15 @@ model Status {
 }
 
 model Worker_User {
-  id               Int           @id @default(autoincrement())
-  phone_no         String        @unique
+  id               Int             @id @default(autoincrement())
+  phone_no         String          @unique
   password         String
-  profileCompleted Boolean       @default(false)
-  status           AccountStatus @default(ACTIVE)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  profileCompleted Boolean         @default(false)
+  status           AccountStatus   @default(ACTIVE)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
   worker           Worker?
+  sessions         WorkerSession[]
 }
 
 model Worker {
@@ -254,4 +256,26 @@ enum AccountStatus {
 enum gender {
   MALE
   Female
+}
+
+model ClientSession {
+  id        Int         @id @default(autoincrement())
+  clientId  Int
+  tokenHash String      @unique
+  createdAt DateTime    @default(now())
+  expiresAt DateTime
+  client    Client_User @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model WorkerSession {
+  id        Int         @id @default(autoincrement())
+  workerId  Int
+  tokenHash String      @unique
+  createdAt DateTime    @default(now())
+  expiresAt DateTime
+  worker    Worker_User @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
 }

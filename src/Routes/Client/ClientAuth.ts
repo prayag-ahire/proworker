@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { userAuth } from "../userAuth";
+import { 
+  invalidateAllUserSessions, 
+  createSession 
+} from "../../utils/sessionUtils";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -35,11 +39,8 @@ router.post("/signup", async (req, res) => {
       }
     });
 
-    const token = jwt.sign(
-      { userId: user.id, role: "client" },
-      "SkillSecret",
-      { expiresIn: "7d" }
-    );
+    // Create first session for new user
+    const token = await createSession(user.id, "client");
 
     return res.json({
       token,
@@ -74,11 +75,11 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, role: "client" },
-      "SkillSecret",
-      { expiresIn: "7d" }
-    );
+    // Invalidate all existing sessions (single session support)
+    await invalidateAllUserSessions(user.id, "client");
+
+    // Create new session
+    const token = await createSession(user.id, "client");
 
     return res.json({
       token,
@@ -136,6 +137,25 @@ router.post("/clientProfile", userAuth, async (req: any, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Profile creation failed" });
+  }
+});
+
+// ====================== CLIENT LOGOUT ======================
+router.post("/logout", userAuth, async (req: any, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+      return res.status(400).json({ message: "No token provided" });
+    }
+
+    const { invalidateToken } = await import("../../utils/sessionUtils");
+    await invalidateToken(token);
+
+    return res.json({ message: "Logged out successfully" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Logout failed" });
   }
 });
 

@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+import { hashToken } from "../utils/sessionUtils";
+
+const prisma = new PrismaClient();
 
 interface JwtPayload {
   userId: number;
@@ -10,7 +14,7 @@ interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-export const userAuth = (
+export const userAuth = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -24,13 +28,33 @@ export const userAuth = (
   const token = authHeader.split(" ")[1];
 
   try {
+    const secret: Secret = (process.env.JWT_SECRET || "SkillSecret") as Secret;
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "SkillSecret"
+      secret
     ) as JwtPayload;
 
     if (!decoded.userId) {
       return res.status(401).json({ msg: "Invalid token payload" });
+    }
+
+    // Verify token exists in database (single session check)
+    const tokenHash = hashToken(token);
+    let session = null;
+
+    if (decoded.role === "client") {
+      session = await prisma.clientSession.findUnique({
+        where: { tokenHash }
+      });
+    } else if (decoded.role === "worker") {
+      session = await prisma.workerSession.findUnique({
+        where: { tokenHash }
+      });
+    }
+
+    // Token not found in database or expired
+    if (!session || session.expiresAt < new Date()) {
+      return res.status(401).json({ msg: "Session expired or invalid" });
     }
 
     req.user = decoded;
@@ -41,4 +65,5 @@ export const userAuth = (
     return res.status(401).json({ msg: "Token is not valid" });
   }
 };
+
 export default userAuth;
