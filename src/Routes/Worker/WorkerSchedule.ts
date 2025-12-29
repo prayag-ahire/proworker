@@ -18,7 +18,7 @@ function parseTimeOrNull(t?: string | null) {
 // Returns the worker's week schedule (single row)
 schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const schedule = await prisma.weekSchedule.findUnique({
       where: { workerId: workerId }
     });
@@ -33,7 +33,7 @@ schedule.get("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response)
 // Body: JSON with Start_* and End_* keys as "HH:mm" or null for each day
 schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const body = req.body || {};
 
     const fields = [
@@ -133,12 +133,9 @@ schedule.post("/WorkerSchedule/weekly", userAuth, async (req: any, res: Response
 
 
 
-// GET /schedule/month?month=YYYY-MM
-// Returns all holiday entries for the month ONLY (no orders)
-// GET /schedule/month?month=YYYY-MM
 schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const month = String(req.query.month || "");
 
     if (!/^\d{4}-\d{2}$/.test(month)) {
@@ -169,7 +166,7 @@ schedule.get("/WorkerSchedule/month", userAuth, async (req: any, res: Response) 
 // POST /schedule/month
 schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const { date, note } = req.body;
 
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -255,7 +252,7 @@ schedule.post("/WorkerSchedule/month", userAuth, async (req: any, res: Response)
 
 schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Response) => {
   try {
-    const workerId = req.user.id;
+    const workerId = req.user.userId;
     const date = String(req.query.date);
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {

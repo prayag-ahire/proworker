@@ -132,12 +132,21 @@ router.post("/workerProfile", userAuth, async (req: any, res) => {
             ReferenceId: ReferenceId || 0
           }
         }
+      },
+      select:{
+        id: true
       }
     });
 
     await prisma.worker_User.update({
       where: { id: userId },
       data: { profileCompleted: true }
+    });
+
+    await prisma.weekSchedule.create({
+      data: {
+        workerId: worker.id
+      }
     });
 
     res.json(worker);
