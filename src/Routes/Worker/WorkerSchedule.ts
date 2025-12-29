@@ -336,8 +336,19 @@ schedule.delete("/WorkerSchedule/month", userAuth, async (req: any, res: Respons
 
     const parsed = dayjs(date).startOf("day").toDate();
 
+    const worker = await prisma.worker_User.findUnique({
+      where: { id: workerId },
+      select: {
+        worker: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
+
     const entry = await prisma.monthSchedule.findFirst({
-      where: { workerId, date: parsed }
+      where: { workerId: worker?.worker?.id, date: parsed }
     });
 
     if (!entry) {
