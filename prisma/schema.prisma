@@ -15,7 +15,6 @@ model Client_User {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   client            Client?
-  client_settings   ClientSettings?
   sessions          ClientSession[]
 }
 
@@ -32,6 +31,7 @@ model Client {
   notification  Notification[]
   review        Review[]
   worker_order  WorkerOrder[]
+  ClientSettings ClientSettings?
 }
 
 model ClientSettings {
@@ -40,7 +40,7 @@ model ClientSettings {
   ReferCode   Int
   ReferenceId Int
   AppLanguage AppLanguage
-  client      Client_User @relation(fields: [clientId], references: [id])
+  client      Client @relation(fields: [clientId], references: [id])
 }
 
 model Status {

@@ -116,7 +116,7 @@ router.post("/clientProfile", userAuth, async (req: any, res) => {
         age: Number(age),
         email,
         gender,
-        client_settings: {
+        ClientSettings: {
           create: {
             AppLanguage: "English",
             ReferCode: Math.floor(100000 + Math.random() * 900000),
