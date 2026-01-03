@@ -11,7 +11,7 @@ const client_Settings = Router();
 // ======================================================
 client_Settings.get("/settings/me/language", userAuth, async (req: any, res: Response) => {
     try {
-        const clientId = req.user.id;
+        const clientId = req.user.userId;
 
         const settings = await prisma.clientSettings.findUnique({
             where: { clientId: clientId },
@@ -22,9 +22,10 @@ client_Settings.get("/settings/me/language", userAuth, async (req: any, res: Res
             return res.status(404).json({ message: "Settings not found" });
         }
 
-        res.json(settings);
-    } catch (err) {
-        res.status(500).json({ message: "Internal server error" });
+        return res.json(settings);
+    } catch (err: any) {
+        console.error("Language fetch failed:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 
@@ -34,7 +35,7 @@ client_Settings.get("/settings/me/language", userAuth, async (req: any, res: Res
 // ======================================================
 client_Settings.put("/settings/me/language", userAuth, async (req: any, res: Response) => {
     try {
-        const clientId = req.user.id;
+        const clientId = req.user.userId;
         const { App_Language } = req.body;
 
         if (!App_Language) {
@@ -47,10 +48,10 @@ client_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
             select: { AppLanguage: true }
         });
 
-        res.json(update);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "Internal server error" });
+        return res.json(update);
+    } catch (err: any) {
+        console.error("Language update failed:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 
@@ -60,7 +61,7 @@ client_Settings.put("/settings/me/language", userAuth, async (req: any, res: Res
 // ======================================================
 client_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Response) => {
     try {
-        const clientId = req.user.id;
+        const clientId = req.user.userId;
 
         const settings = await prisma.clientSettings.findUnique({
             where: { clientId: clientId },
@@ -71,10 +72,10 @@ client_Settings.get("/settings/me/invite", userAuth, async (req: any, res: Respo
             return res.status(404).json({ message: "Settings not found" });
         }
 
-        res.json(settings);   // returns: { "ReferCode": 123456 }
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "Internal server error" });
+        return res.json(settings);   // returns: { "ReferCode": 123456 }
+    } catch (err: any) {
+        console.error("Invite fetch failed:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 

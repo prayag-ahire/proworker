@@ -8,57 +8,65 @@ const client_Profile = Router();
 // ====================== 1. GET PROFILE ======================
 client_Profile.get("/Profile/me", userAuth, async (req: any, res) => {
   try {
-    const ClientId = req.user.id;
+    const clientId = req.user.userId;
 
-    const data = await prisma.client.findUnique({
-      where: { id: ClientId },
+    const client = await prisma.client.findUnique({
+      where: { userId: clientId },
       select : {
         id: true,
         username: true,
         ImgURL: true,
         age: true,
         email: true,
-        gender: true,
+        gender: true
       }
     });
 
-    if (!data) {
+    if (!client) {
       return res.status(404).json({ message: "Client not found" });
     }
 
-    res.json(data);
+    return res.json(client);
     
-  } catch (err) {
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err: any) {
+    console.error("Get profile failed:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // ====================== 2. UPDATE PROFILE ======================
 client_Profile.put("/Profile/me", userAuth, async (req: any, res) => {
   try {
-    const ClientId = req.user.id;
+    const clientId = req.user.userId;
 
-    const { name, age, email, gender, ImgURL, Contact_number } = req.body;
+    const { username, age, email, gender, ImgURL } = req.body;
 
     const dataToUpdate: any = {};
 
-    if (name) dataToUpdate.name = name;
+    if (username) dataToUpdate.username = username;
     if (age) dataToUpdate.age = Number(age);
     if (email) dataToUpdate.email = email;
     if (gender) dataToUpdate.gender = gender;
     if (ImgURL) dataToUpdate.ImgURL = ImgURL;
-    if (Contact_number) dataToUpdate.Contact_number = Contact_number;
 
     const updated = await prisma.client.update({
-      where: { id: ClientId },
-      data: dataToUpdate
+      where: { userId: clientId },
+      data: dataToUpdate,
+      select: {
+        id: true,
+        username: true,
+        ImgURL: true,
+        age: true,
+        email: true,
+        gender: true
+      }
     });
 
-    res.json(updated);
+    return res.json(updated);
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err: any) {
+    console.error("Update profile failed:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

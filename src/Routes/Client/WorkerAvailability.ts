@@ -48,9 +48,9 @@ workerAvailability.get("/worker/:id/available-dates", userAuth, async (req: any,
 
     return res.json({ availableDates });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err: any) {
+    console.error("Available dates fetch failed:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -110,8 +110,8 @@ workerAvailability.get("/worker/:id/available-slots", userAuth, async (req: any,
 
     return res.json({ slots });
 
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Available slots fetch failed:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

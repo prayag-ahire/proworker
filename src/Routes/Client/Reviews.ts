@@ -9,7 +9,7 @@ const ReviewRouter = Router();
 // POST REVIEW
 ReviewRouter.post("/Review/:orderId", userAuth, async (req: any, res: Response) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId;
     const orderId = Number(req.params.orderId);
     const { Name, Comment, images = [], videos = [] } = req.body;
 

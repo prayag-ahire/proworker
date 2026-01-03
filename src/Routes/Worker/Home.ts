@@ -11,7 +11,7 @@ const Home = Router();
 
 Home.get("/home/me", userAuth, async (req: any, res: Response) => {
     try {
-        const workerId = req.user.id;
+        const workerId = req.user.userId;
         const view = req.query.view || "day";
 
         const today = dayjs();
@@ -26,21 +26,28 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
                     date: new Date(todaysDate)
                 },
                 select:{
+                    id: true,
                     client: {
                         select: {
                             username: true,
+                            ImgURL: true
                         }
                     },
                     Order_Status: true,
+                    Status: {
+                        select: {
+                            status_name: true
+                        }
+                    },
                     date: true,
                     time: true,
                 }
             });
 
             const summary = {
-                pending: orders.filter((o: any) => o.Work_Status === "pending").length,
-                completed: orders.filter((o: any) => o.Work_Status === "completed").length,
-                canceled: orders.filter((o: any) => o.Work_Status === "canceled").length,
+                pending: orders.filter((o: any) => o.Order_Status === 2).length,
+                completed: orders.filter((o: any) => o.Order_Status === 1).length,
+                canceled: orders.filter((o: any) => o.Order_Status === 3).length,
             };
 
             return res.json({
@@ -63,6 +70,16 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
                         gte: start.toDate(),
                         lte: end.toDate()
                     }
+                },
+                select: {
+                    id: true,
+                    Order_Status: true,
+                    date: true,
+                    client: {
+                        select: {
+                            username: true
+                        }
+                    }
                 }
             });
 
@@ -78,9 +95,9 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
                 weekData.push({
                     day: day.format("dddd"),
                     count: dayOrders.length,
-                    pending: dayOrders.filter((o: any) => o.Work_Status === "pending").length,
-                    completed: dayOrders.filter((o: any) => o.Work_Status === "completed").length,
-                    canceled: dayOrders.filter((o: any) => o.Work_Status === "canceled").length,
+                    pending: dayOrders.filter((o: any) => o.Order_Status === 2).length,
+                    completed: dayOrders.filter((o: any) => o.Order_Status === 1).length,
+                    canceled: dayOrders.filter((o: any) => o.Order_Status === 3).length,
                 });
             }
 
@@ -100,15 +117,20 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
                 where: {
                     workerId: workerId,
                     date: { gte: start, lte: end }
+                },
+                select: {
+                    id: true,
+                    Order_Status: true,
+                    date: true
                 }
             });
 
             const totalOrders = orders.length;
 
             const summary = {
-                pending: orders.filter((o: any) => o.Work_Status === "pending").length,
-                completed: orders.filter((o: any) => o.Work_Status === "completed").length,
-                canceled: orders.filter((o: any) => o.Work_Status === "canceled").length,
+                pending: orders.filter((o: any) => o.Order_Status === 2).length,
+                completed: orders.filter((o: any) => o.Order_Status === 1).length,
+                canceled: orders.filter((o: any) => o.Order_Status === 3).length,
             };
 
             return res.json({
@@ -121,9 +143,9 @@ Home.get("/home/me", userAuth, async (req: any, res: Response) => {
 
         return res.status(400).json({ message: "Invalid view" });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Internal server error" });
+    } catch (err: any) {
+        console.error("Home view error:", err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 });
 

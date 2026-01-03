@@ -8,7 +8,7 @@ const Booking = Router();
 // ==================== CREATE BOOKING ====================
 Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId;
     const { workerId, date, time } = req.body;
 
     const today = new Date();
@@ -33,15 +33,16 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
       where: {
         workerId,
         date: selectedDate,
-        time: onlyTime
+        time: onlyTime,
+        Order_Status: { not: 3 }
       }
     });
 
-    if (existingOrder && existingOrder.Order_Status !== 3) {
-      return res.status(400).json({ message: "Time slot is not available!" });
+    if (existingOrder) {
+      return res.status(409).json({ message: "Time slot is not available!" });
     }
 
-    // ✔ Create booking
+    // 🔐 Atomic booking creation
     const order = await prisma.workerOrder.create({
       data: {
         date: selectedDate,
@@ -50,6 +51,12 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
         reschedule_comment: null,
         workerId: workerId,
         clientId: clientId
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        Order_Status: true
       }
     });
 
@@ -68,8 +75,8 @@ Booking.post("/Booking/create", userAuth, async (req: any, res: Response) => {
       order
     });
 
-  } catch (err) {
-    console.log(err);
+  } catch (err: any) {
+    console.error("Booking creation failed:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });

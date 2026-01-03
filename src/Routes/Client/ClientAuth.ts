@@ -98,15 +98,16 @@ router.post("/clientProfile", userAuth, async (req: any, res) => {
     const userId = req.user.userId;
     const { username, ImgURL, age, email, gender } = req.body;
 
-    // Prevent duplicate profile
+    // 🔒 Prevent duplicate profile creation
     const exists = await prisma.client.findUnique({
       where: { userId }
     });
 
     if (exists) {
-      return res.status(400).json({ message: "Profile already exists" });
+      return res.status(409).json({ message: "Client profile already exists" });
     }
 
+    // 🔐 Atomic operation
     const client = await prisma.client.create({
       data: {
         userId,
@@ -114,16 +115,17 @@ router.post("/clientProfile", userAuth, async (req: any, res) => {
         ImgURL,
         age: Number(age),
         email,
-        gender
-      }
-    });
-
-    await prisma.clientSettings.create({
-      data: {
-        clientId: client.id,
-        AppLanguage: "English",
-        ReferCode: Math.floor(100000 + Math.random() * 900000),
-        ReferenceId: 0
+        gender,
+        client_settings: {
+          create: {
+            AppLanguage: "English",
+            ReferCode: Math.floor(100000 + Math.random() * 900000),
+            ReferenceId: 0
+          }
+        }
+      },
+      select: {
+        id: true
       }
     });
 
@@ -134,9 +136,18 @@ router.post("/clientProfile", userAuth, async (req: any, res) => {
 
     return res.json(client);
 
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Profile creation failed" });
+  } catch (err: any) {
+    console.error("Client profile creation failed:", err);
+
+    if (err.code === "P2002") {
+      return res.status(409).json({
+        message: "Client profile already exists"
+      });
+    }
+
+    return res.status(500).json({
+      message: "Profile creation failed"
+    });
   }
 });
 

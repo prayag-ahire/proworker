@@ -9,7 +9,7 @@ const schedule = Router();
 schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response) => {
   try {
     const orderId = Number(req.params.id);
-    const clientId = req.user.id;
+    const clientId = req.user.userId;
     const { comment, new_date, new_time } = req.body;
 
     if (!comment || !new_date || !new_time) {
@@ -20,9 +20,9 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
     const finalDateTime = new Date(`${new_date}T${new_time}:00`);
     const now = new Date();
 
-    // Get order
+    // Get order with proper authorization
     const order = await prisma.workerOrder.findUnique({
-      where: { id: orderId, clientId: clientId }
+      where: { id: orderId }
     });
 
     if (!order || order.clientId !== clientId) {
@@ -49,7 +49,6 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
     const slotTaken = await prisma.workerOrder.findFirst({
       where: {
         workerId: order.workerId,
-        clientId: clientId,
         date: selectedDate,
         time: finalDateTime,
         NOT: { id: orderId },
@@ -58,16 +57,22 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
     });
 
     if (slotTaken) {
-      return res.status(400).json({ message: "This time slot is already booked" });
+      return res.status(409).json({ message: "This time slot is already booked" });
     }
 
-    // Update booking
+    // 🔐 Atomic update operation
     const updated = await prisma.workerOrder.update({
-      where: { id: orderId, clientId: clientId },
+      where: { id: orderId },
       data: {
         reschedule_comment: comment,
         date: selectedDate,
         time: finalDateTime,
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        workerId: true
       }
     });
 
@@ -75,8 +80,8 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
     await prisma.notification.create({
       data: {
         clientId: clientId,
-        workerId: order.workerId,
-        orderId: order.id,
+        workerId: updated.workerId,
+        orderId: orderId,
         message: `Client requested to reschedule the booking to ${new_date} at ${new_time}`
       }
     });
@@ -86,8 +91,8 @@ schedule.post("/orders/:id/reschedule", userAuth, async (req: any, res: Response
       order: updated
     });
 
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Order reschedule failed:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -100,7 +105,7 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
 
     // 1. Get order
     const order = await prisma.workerOrder.findUnique({
-      where: { id: orderId , clientId: clientId }
+      where: { id: orderId }
     });
 
     // 2. Check existence + authorization
@@ -113,15 +118,14 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
       return res.status(400).json({ message: "Only pending orders can be canceled" });
     }
 
-    // 4. Cancel the order
+    // 4. 🔐 Atomic cancel operation
     const updated = await prisma.workerOrder.update({
-      where: { id: orderId , clientId: clientId },
+      where: { id: orderId },
       data: { Order_Status: 3 },
       select: {
         id: true,
         Order_Status: true,
         date: true,
-        time: true,
         workerId: true
       }
     });
@@ -141,8 +145,8 @@ schedule.post("/orders/:id/cancel", userAuth, async (req: any, res: Response) =>
       order: updated
     });
 
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Order cancellation failed:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

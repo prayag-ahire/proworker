@@ -22,9 +22,9 @@ workerlist.get("/workers", userAuth, async (req: any, res: Response) => {
     // ---------------- BASE QUERY ----------------
     let whereClause: any = {};
 
-    // SEARCH by name only (description removed)
+    // SEARCH by username
     if (search) {
-      whereClause.Name = {
+      whereClause.username = {
         contains: String(search),
         mode: "insensitive"
       };
@@ -45,25 +45,14 @@ workerlist.get("/workers", userAuth, async (req: any, res: Response) => {
       }
     });
 
-    // ---------------- PRICE PRIORITY ----------------
+    // 🔐 Atomic data transformation
     const processed = workers.map((w:any) => {
-      let priceValue = 0;
-      let priceType = "";
-
-      if (w.Charges_PerVisit && w.Charges_PerVisit > 0) {
-        priceValue = w.Charges_PerVisit;
-        priceType = "visit";
-      } else if (w.Charges_PerHour && w.Charges_PerHour > 0) {
-        priceValue = w.Charges_PerHour;
-        priceType = "hour";
-      } else {
-        priceValue = 0;
-        priceType = "none";
-      }
+      const priceValue = w.Charges_PerVisit || 0;
+      const priceType = priceValue > 0 ? "visit" : "none";
 
       return {
         id: w.id,
-        name: w.Name,
+        name: w.username,
         image: w.ImgURL,
         rating: w.Rating,
         price: priceValue,
